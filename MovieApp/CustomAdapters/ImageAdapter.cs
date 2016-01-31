@@ -27,7 +27,9 @@ namespace MovieApp
         }
 
 
-            
+        public void clear(){
+            posterPaths.Clear();
+        }
 
         public override int Count
         {
@@ -63,6 +65,7 @@ namespace MovieApp
             }else{
                 imageView=(ImageView)convertView;
             }
+
             Picasso.With(context).Load("http://image.tmdb.org/t/p/w185/"+posterPaths[position]).Into(imageView);
 
             return imageView;

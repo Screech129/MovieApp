@@ -48,9 +48,16 @@ namespace MovieApp
             return view;
         }
 
+        public override void OnStart()
+        {
+            base.OnStart();
+
+            GetMovies(this.View.FindViewById<GridView>(Resource.Id.poster_grid));
+        }
         public async Task GetMovies(GridView view){
             try
             {
+                
                 var httpClient = new HttpClient();
                 ISharedPreferences prefs = PreferenceManager.GetDefaultSharedPreferences(Activity);
                 var sortBy = prefs.GetString(Resources.GetString(Resource.String.pref_sort_key),Resources.GetString(Resource.String.pref_sort_default));
@@ -68,14 +75,15 @@ namespace MovieApp
         private void getMoviePosterPaths (string popularMovies, GridView view){
             var pathsJson = new  JSONObject(popularMovies);
             var pathArray = pathsJson.GetJSONArray("results");
+            paths.Clear();
             for (var i = 0; i < pathArray.Length(); i++)
             {
                 var posterPath = pathArray.GetJSONObject(i);
                 paths.Add(posterPath.GetString("poster_path"));
                 movieIds.Add(posterPath.GetInt("id"));
             }
-
-            view.Adapter = new ImageAdapter(Activity,paths,movieIds);
+            var imgAdapter = new ImageAdapter(Activity, paths, movieIds);
+            view.Adapter = imgAdapter;
 
         }
     }
