@@ -1,13 +1,14 @@
 ﻿using Android.App;
 using Android.Widget;
 using Android.OS;
+using Android.Views;
+using Android.Content;
 
 namespace MovieApp
 {
     [Activity(Label = "MovieApp", MainLauncher = true, Icon = "@mipmap/icon")]
     public class MainActivity : Activity
     {
-        int count = 1;
 
         protected override void OnCreate(Bundle savedInstanceState)
         {
@@ -16,14 +17,23 @@ namespace MovieApp
             // Set our view from the "main" layout resource
             SetContentView(Resource.Layout.Main);
 
-            // Get our button from the layout resource,
-            // and attach an event to it
-            Button button = FindViewById<Button>(Resource.Id.myButton);
-			
-            button.Click += delegate
+        }
+
+        public override bool OnCreateOptionsMenu(IMenu menu)
+        {
+            MenuInflater.Inflate(Resource.Menu.main, menu);
+            return base.OnCreateOptionsMenu(menu);
+        }
+
+        public override bool OnMenuItemSelected(int featureId, IMenuItem item)
+        {
+            int id = item.ItemId;
+            if (id == Resource.Id.action_settings)
             {
-                button.Text = string.Format("{0} clicks!", count++);
-            };
+                StartActivity(new Intent(this, typeof(SettingsActivity)));
+                return true;
+            }
+            return base.OnMenuItemSelected(featureId, item);
         }
     }
 }
