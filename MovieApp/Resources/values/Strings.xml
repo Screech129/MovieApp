@@ -24,4 +24,6 @@
 	<item>popularity.desc</item>
 	<item>vote_average.desc</item>
 	</string-array>
+
+  <string name="content_authority">com.silverlining.movieapp</string>
 </resources>
