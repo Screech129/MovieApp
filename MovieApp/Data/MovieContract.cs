@@ -101,7 +101,7 @@ namespace MovieApp.Data
             public string Trailers { get; set; }
 
             [NotNull]
-            public int VoteAverage { get; set; }
+            public decimal VoteAverage { get; set; }
 
             public static Uri ContentUri = BaseContentUri.BuildUpon().AppendPath(PathFavorites).Build();
             public static string ContentType = ContentResolver.CursorDirBaseType + "/" + ContentAuthority + "/" + PathFavorites;

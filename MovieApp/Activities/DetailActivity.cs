@@ -1,4 +1,4 @@
-﻿ 
+﻿
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,7 +15,8 @@ using System.Threading.Tasks;
 using Org.Json;
 using Android.Util;
 using Square.Picasso;
-
+using MovieApp.Data;
+using Uri = Android.Net.Uri;
 namespace MovieApp.Activities
 {
     [Activity(Label = "DetailActivity")]			
@@ -27,7 +28,7 @@ namespace MovieApp.Activities
             RequestWindowFeature(WindowFeatures.ActionBar);
             SetContentView(Resource.Layout.activity_detail);
             ActionBar.SetDisplayHomeAsUpEnabled(true);
-
+            ActionBar.Title = "Movie Details";
             if (savedInstanceState == null)
             {
                 FragmentTransaction fragTx = this.FragmentManager.BeginTransaction();
@@ -64,7 +65,7 @@ namespace MovieApp.Activities
             if (intent != null && intent.HasExtra (Intent.ExtraText))
             {
                 var movieId = intent.GetLongExtra(Intent.ExtraText, 0);
-                var movieRequest = getMoveInfo(movieId);
+                var movieRequest = GetMoveInfo(movieId);
                 var movieInfo = movieRequest;
 
                 var titleTV = rootView.FindViewById<TextView>(Resource.Id.title_text);
@@ -81,32 +82,34 @@ namespace MovieApp.Activities
             return rootView;
         }
 
-        private List<string> getMoveInfo(long movieId)
+        private List<string> GetMoveInfo(long movieId)
         {
             var httpClient = new HttpClient();
 
             List<string> jsonValue = new List<string>();
-            Task<string> getJSON = httpClient.GetStringAsync("http://api.themoviedb.org/3/movie/"+movieId+ "?api_key=51be394ff82a4dec506f5cf2ce21f6d4");
-            var movieInfoStringBuilder = new StringBuilder();
-            movieInfoStringBuilder.Append( getJSON.Result);
-            var JSONString = movieInfoStringBuilder.ToString();
+            
             try
             {
+                Task<string> getJSON = httpClient.GetStringAsync("http://api.themoviedb.org/3/movie/" + movieId + "?api_key=51be394ff82a4dec506f5cf2ce21f6d4");
+                var movieInfoStringBuilder = new StringBuilder();
+                movieInfoStringBuilder.Append(getJSON.Result);
+                var JSONString = movieInfoStringBuilder.ToString();
                 JSONObject movieInfoJson = new JSONObject (JSONString);
                 jsonValue.Add( movieInfoJson.GetString("original_title"));
                 jsonValue.Add( movieInfoJson.GetString("poster_path"));
                 jsonValue.Add(movieInfoJson.GetString("overview"));
                 jsonValue.Add(movieInfoJson.GetString("vote_average"));
                 jsonValue.Add(movieInfoJson.GetString("release_date"));
+                jsonValue.Add(movieInfoJson.GetString("id"));
             }
             catch (Exception ex)
             {
                 Log.Error("DetailActivityJSON",ex.Message); 
             }
-            return jsonValue;
-
-           
+            return jsonValue;           
         }
+
+        
     }
 }
 

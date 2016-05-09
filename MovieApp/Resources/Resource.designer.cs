@@ -31,11 +31,11 @@ namespace MovieApp
 		public partial class Array
 		{
 			
-			// aapt resource value: 0x7f060000
-			public const int pref_sort_entries = 2131099648;
+			// aapt resource value: 0x7f070000
+			public const int pref_sort_entries = 2131165184;
 			
-			// aapt resource value: 0x7f060001
-			public const int pref_sort_values = 2131099649;
+			// aapt resource value: 0x7f070001
+			public const int pref_sort_values = 2131165185;
 			
 			static Array()
 			{
@@ -60,62 +60,81 @@ namespace MovieApp
 			}
 		}
 		
+		public partial class Color
+		{
+			
+			// aapt resource value: 0x7f050001
+			public const int movie_dark_green = 2131034113;
+			
+			// aapt resource value: 0x7f050000
+			public const int movie_green = 2131034112;
+			
+			static Color()
+			{
+				global::Android.Runtime.ResourceIdManager.UpdateIdValues();
+			}
+			
+			private Color()
+			{
+			}
+		}
+		
 		public partial class Id
 		{
 			
-			// aapt resource value: 0x7f080011
-			public const int action_settings = 2131230737;
+			// aapt resource value: 0x7f0a0011
+			public const int action_settings = 2131361809;
 			
-			// aapt resource value: 0x7f080000
-			public const int container = 2131230720;
+			// aapt resource value: 0x7f0a0000
+			public const int container = 2131361792;
 			
-			// aapt resource value: 0x7f080010
-			public const int fragment_poster = 2131230736;
+			// aapt resource value: 0x7f0a0010
+			public const int fragment_poster = 2131361808;
 			
-			// aapt resource value: 0x7f080005
-			public const int moviePoster = 2131230725;
+			// aapt resource value: 0x7f0a0005
+			public const int moviePoster = 2131361797;
 			
-			// aapt resource value: 0x7f080007
-			public const int plot_label = 2131230727;
+			// aapt resource value: 0x7f0a0007
+			public const int plot_label = 2131361799;
 			
-			// aapt resource value: 0x7f080006
-			public const int plot_layout = 2131230726;
+			// aapt resource value: 0x7f0a0006
+			public const int plot_layout = 2131361798;
 			
-			// aapt resource value: 0x7f080008
-			public const int plot_text = 2131230728;
+			// aapt resource value: 0x7f0a0008
+			public const int plot_text = 2131361800;
 			
-			// aapt resource value: 0x7f08000f
-			public const int poster_grid = 2131230735;
+			// aapt resource value: 0x7f0a000f
+			public const int poster_grid = 2131361807;
 			
-			// aapt resource value: 0x7f080004
-			public const int poster_layout = 2131230724;
+			// aapt resource value: 0x7f0a0004
+			public const int poster_layout = 2131361796;
 			
-			// aapt resource value: 0x7f08000a
-			public const int rating_label = 2131230730;
+			// aapt resource value: 0x7f0a000a
+			public const int rating_label = 2131361802;
 			
-			// aapt resource value: 0x7f080009
-			public const int rating_layout = 2131230729;
+			// aapt resource value: 0x7f0a0009
+			public const int rating_layout = 2131361801;
 			
-			// aapt resource value: 0x7f08000b
-			public const int rating_text = 2131230731;
+			// aapt resource value: 0x7f0a000b
+			public const int rating_text = 2131361803;
 			
-			// aapt resource value: 0x7f08000d
-			public const int releaseDate_label = 2131230733;
+			// aapt resource value: 0x7f0a000d
+			public const int releaseDate_label = 2131361805;
 			
-			// aapt resource value: 0x7f08000c
-			public const int releaseDate_layout = 2131230732;
+			// aapt resource value: 0x7f0a000c
+			public const int releaseDate_layout = 2131361804;
 			
-			// aapt resource value: 0x7f08000e
-			public const int releaseDate_text = 2131230734;
+			// aapt resource value: 0x7f0a000e
+			public const int releaseDate_text = 2131361806;
 			
-			// aapt resource value: 0x7f080002
-			public const int title_label = 2131230722;
+			// aapt resource value: 0x7f0a0002
+			public const int title_label = 2131361794;
 			
-			// aapt resource value: 0x7f080001
-			public const int title_layout = 2131230721;
+			// aapt resource value: 0x7f0a0001
+			public const int title_layout = 2131361793;
 			
-			// aapt resource value: 0x7f080003
-			public const int title_text = 2131230723;
+			// aapt resource value: 0x7f0a0003
+			public const int title_text = 2131361795;
 			
 			static Id()
 			{
@@ -155,8 +174,8 @@ namespace MovieApp
 		public partial class Menu
 		{
 			
-			// aapt resource value: 0x7f070000
-			public const int main = 2131165184;
+			// aapt resource value: 0x7f090000
+			public const int main = 2131296256;
 			
 			static Menu()
 			{
@@ -187,53 +206,56 @@ namespace MovieApp
 		public partial class String
 		{
 			
-			// aapt resource value: 0x7f05000a
-			public const int action_settings = 2131034122;
+			// aapt resource value: 0x7f06000a
+			public const int action_settings = 2131099658;
 			
-			// aapt resource value: 0x7f050001
-			public const int app_name = 2131034113;
+			// aapt resource value: 0x7f060001
+			public const int app_name = 2131099649;
 			
-			// aapt resource value: 0x7f050000
-			public const int hello = 2131034112;
+			// aapt resource value: 0x7f060010
+			public const int content_authority = 2131099664;
 			
-			// aapt resource value: 0x7f050004
-			public const int plot_label = 2131034116;
+			// aapt resource value: 0x7f060000
+			public const int hello = 2131099648;
 			
-			// aapt resource value: 0x7f050005
-			public const int plot_text = 2131034117;
+			// aapt resource value: 0x7f060004
+			public const int plot_label = 2131099652;
 			
-			// aapt resource value: 0x7f05000c
-			public const int pref_sortDialog_label = 2131034124;
+			// aapt resource value: 0x7f060005
+			public const int plot_text = 2131099653;
 			
-			// aapt resource value: 0x7f05000f
-			public const int pref_sort_default = 2131034127;
+			// aapt resource value: 0x7f06000c
+			public const int pref_sortDialog_label = 2131099660;
 			
-			// aapt resource value: 0x7f05000d
-			public const int pref_sort_key = 2131034125;
+			// aapt resource value: 0x7f06000f
+			public const int pref_sort_default = 2131099663;
 			
-			// aapt resource value: 0x7f05000b
-			public const int pref_sort_label = 2131034123;
+			// aapt resource value: 0x7f06000d
+			public const int pref_sort_key = 2131099661;
 			
-			// aapt resource value: 0x7f05000e
-			public const int pref_sort_summary = 2131034126;
+			// aapt resource value: 0x7f06000b
+			public const int pref_sort_label = 2131099659;
 			
-			// aapt resource value: 0x7f050006
-			public const int rating_label = 2131034118;
+			// aapt resource value: 0x7f06000e
+			public const int pref_sort_summary = 2131099662;
 			
-			// aapt resource value: 0x7f050007
-			public const int rating_text = 2131034119;
+			// aapt resource value: 0x7f060006
+			public const int rating_label = 2131099654;
 			
-			// aapt resource value: 0x7f050008
-			public const int releaseDate_label = 2131034120;
+			// aapt resource value: 0x7f060007
+			public const int rating_text = 2131099655;
 			
-			// aapt resource value: 0x7f050009
-			public const int releaseDate_text = 2131034121;
+			// aapt resource value: 0x7f060008
+			public const int releaseDate_label = 2131099656;
 			
-			// aapt resource value: 0x7f050002
-			public const int title_label = 2131034114;
+			// aapt resource value: 0x7f060009
+			public const int releaseDate_text = 2131099657;
 			
-			// aapt resource value: 0x7f050003
-			public const int title_text = 2131034115;
+			// aapt resource value: 0x7f060002
+			public const int title_label = 2131099650;
+			
+			// aapt resource value: 0x7f060003
+			public const int title_text = 2131099651;
 			
 			static String()
 			{
@@ -241,6 +263,22 @@ namespace MovieApp
 			}
 			
 			private String()
+			{
+			}
+		}
+		
+		public partial class Style
+		{
+			
+			// aapt resource value: 0x7f080000
+			public const int AppTheme = 2131230720;
+			
+			static Style()
+			{
+				global::Android.Runtime.ResourceIdManager.UpdateIdValues();
+			}
+			
+			private Style()
 			{
 			}
 		}

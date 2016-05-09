@@ -2,6 +2,8 @@
 using Android.Content;
 using System.IO;
 using SQLite;
+using Android.Util;
+using System.Threading.Tasks;
 
 namespace MovieApp.Data
 {
@@ -15,11 +17,32 @@ namespace MovieApp.Data
 
         }
 
-        public void CreateDatabase (Type tableToCreate)
+        public async Task CreateDatabase (Type tableToCreate)
         {
             string dbPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Personal),"movie.db3");
-            var db = new SQLiteConnection(dbPath);
-            db.CreateTable(tableToCreate, CreateFlags.None);
+            var db = new SQLiteAsyncConnection(dbPath);
+            await db.CreateTablesAsync(CreateFlags.None, tableToCreate);
+        }
+
+        public void DeleteDatabase ()
+        {
+            string dbPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Personal), "movie.db3");
+            File.Delete(dbPath);
+        }
+
+        public async static Task<bool> TableExists<T> (SQLiteAsyncConnection connection, string tableName)
+        {
+            try
+            {
+                const string cmdText = "SELECT name FROM sqlite_master WHERE type='table' AND name=?";
+                return await connection.ExecuteScalarAsync<string>(cmdText,tableName) != null;
+            }
+            catch (Exception ex)
+            {
+                Log.Debug("SQLException", ex.Message);
+                return false;
+            }
+            
         }
        
     }
