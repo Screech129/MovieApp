@@ -193,6 +193,9 @@ namespace MovieApp
 			// aapt resource value: 0x7f050001
 			public const int app_name = 2131034113;
 			
+			// aapt resource value: 0x7f050010
+			public const int content_authority = 2131034128;
+			
 			// aapt resource value: 0x7f050000
 			public const int hello = 2131034112;
 			
