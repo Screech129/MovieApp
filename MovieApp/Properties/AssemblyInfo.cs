@@ -26,3 +26,4 @@ using Android.App;
 //[assembly: AssemblyDelaySign(false)]
 //[assembly: AssemblyKeyFile("")]
 [assembly:InternalsVisibleTo("IntegrationTests")]
+[assembly:InternalsVisibleTo("XUnitIntegrationTests")]

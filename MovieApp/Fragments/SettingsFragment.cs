@@ -45,7 +45,7 @@ namespace MovieApp.Fragments
         }
             
 
-        public void OnSharedPreferenceChanged(ISharedPreferences sharedPreferences, string key)
+        public async void OnSharedPreferenceChanged(ISharedPreferences sharedPreferences, string key)
         {
             Preference pref = FindPreference (key);
             if (pref.GetType () == typeof(ListPreference)) {
@@ -65,7 +65,7 @@ namespace MovieApp.Fragments
             {
                 var provider = new MovieProvider();
                 Android.Net.Uri uri = MovieContract.MoviesTable.ContentUri;
-                provider.DeleteRecords(uri, null, null);
+                await provider.DeleteRecords(uri, null, null);
             }
         }
     }

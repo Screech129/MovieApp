@@ -83,7 +83,7 @@ namespace MovieApp.Data
             }
             return -1;
         }
-        public int DeleteRecords (Uri uri, string selection, string[] selectionArgs)
+        public async Task<int> DeleteRecords (Uri uri, string selection, string[] selectionArgs)
         {
             var db = new SQLiteAsyncConnection(dbPath);
             var deletedRows = 0;
@@ -94,10 +94,10 @@ namespace MovieApp.Data
             switch (match)
             {
                 case Favorites:
-                    deletedRows = db.DeleteAsync(selection).Result;
+                    deletedRows = await db.DeleteAsync(selection);
                     break;
                 case Movies:
-                    deletedRows = db.ExecuteAsync("DELETE FROM 'Movies'").Result;
+                    deletedRows = await db.ExecuteAsync("DELETE FROM 'Movies'");
                     break;
                 default:
                     throw new UnsupportedOperationException("Unkown uri: " + uri);
@@ -150,39 +150,82 @@ namespace MovieApp.Data
             }
         }
 
-        public Uri Insert<T> (Uri uri, List<T> values)
+        public async Task<Uri> Insert<T> (Uri uri, List<T> values)
         {
             var db = new SQLiteAsyncConnection(dbPath);
-            Uri returnUri;
+            Uri returnUri = null;
             int match = MatchUri(uri);
             switch (match)
             {
                 case Favorites:
                     {
-                        long _id = db.InsertAsync(values[0]).Result;
-                        if (_id > 0) returnUri = MovieContract.FavoritesTable.BuildUri(_id);
-                        else throw new SQLException("Failed to insert row into " + uri);
+                        long _id = 0;
+                        try
+                        {
+                            var value = (MovieContract.FavoritesTable)(object)values[0];
+                            try
+                            {
+                                await db.InsertAsync(value).ContinueWith(t =>
+                                {
+                                    _id = value.Id;
+                                    if (_id > 0) returnUri = MovieContract.FavoritesTable.BuildUri(_id);
+                                    else throw new SQLException("Failed to insert row into " + uri);
+                                    context.ContentResolver.NotifyChange(uri, null);
+                                    return returnUri;
+                                });
+                            }
+                            catch (System.Exception ex)
+                            {
+                                Log.Debug("SQLException", ex.ToString());
+                                throw;
+                            }
+                           
+
+                        }
+                        catch (System.Exception ex)
+                        {
+                            Log.Debug("SqlInsert", ex.Message);
+                            throw;
+                        }
+
                         break;
+
                     }
                 case Movies:
                     {
-                        long _id = db.InsertAsync(values[0]).Result;
-                        if (_id > 0) returnUri = MovieContract.MoviesTable.BuildUri(_id);
-                        else throw new SQLException("Failed to insert row into " + uri);
+                        long _id = 0;
+                        try
+                        {
+                            var value = (MovieContract.MoviesTable)(object)values[0];
+                            await db.InsertAsync(value).ContinueWith(t =>
+                            {
+                                _id = value.Id;
+                                if (_id > 0) returnUri = MovieContract.MoviesTable.BuildUri(_id);
+                                else throw new SQLException("Failed to insert row into " + uri);
+                                context.ContentResolver.NotifyChange(uri, null);
+                                return returnUri;
+                            });
+
+                        }
+                        catch (System.Exception ex)
+                        {
+                            Log.Debug("SqlInsert", ex.Message);
+                            throw;
+                        }
+
                         break;
                     }
 
                 default:
                     throw new UnsupportedOperationException("Unknown uri: " + uri);
-
             }
-            context.ContentResolver.NotifyChange(uri, null);
             return returnUri;
         }
 
-        public int BulkInsert<T> (Uri uri, List<T> values)
+        public async Task<int> BulkInsert (Uri uri, List<MovieContract.MoviesTable> values)
         {
             var db = new SQLiteAsyncConnection(dbPath);
+            var table = db.Table<MovieContract.MoviesTable>();
             int match = MatchUri(uri);
 
             switch (match)
@@ -191,23 +234,30 @@ namespace MovieApp.Data
                     int returnCount = 0;
                     try
                     {
-                        db.RunInTransactionAsync((SQLiteConnection conn) =>
+                        long _id = -1;
+                       await db.RunInTransactionAsync(async (SQLiteConnection conn) =>
                         {
-                            foreach (T value in values)
+                            foreach (MovieContract.MoviesTable value in values)
                             {
-                                long _id = db.InsertAsync(value).Result;
-                                if (_id != -1) returnCount++;
+                                await db.InsertAsync(value).ContinueWith(t =>
+                                {
+                                    _id = t.Id;
+                                    if (_id != -1) returnCount++;
+                                });
                             }
+                            conn.Close();
                         });
 
-
+                        context.ContentResolver.NotifyChange(uri, null);
+                        return returnCount;
                     }
                     catch (Java.Lang.Exception ex)
                     {
                         Log.Debug("BulkInsert", ex.Message);
                     }
-                    context.ContentResolver.NotifyChange(uri, null);
+
                     return returnCount;
+
                 default:
                     return 0;
             }
@@ -235,7 +285,7 @@ namespace MovieApp.Data
                     }
                 case FavoriteFromId:
                     {
-                        await moviesTable.Where(m=>m.MovieId == int.Parse(selection)).ToListAsync();
+                        await moviesTable.Where(m => m.MovieId == int.Parse(selection)).ToListAsync();
                         break;
                     }
                 default:
@@ -245,9 +295,9 @@ namespace MovieApp.Data
             return returnQuery;
         }
 
-        public async  Task<AsyncTableQuery<MovieContract.MoviesTable>> QueryMovies (Uri uri, string[] projection, string selection, string sortOrder)
+        public async Task<List<MovieContract.MoviesTable>> QueryMovies (Uri uri, string[] projection, string selection, string sortOrder)
         {
-            AsyncTableQuery<MovieContract.MoviesTable> returnQuery = null;
+            List<MovieContract.MoviesTable> returnQuery = null;
             var match = MatchUri(uri);
             var db = new SQLiteAsyncConnection(dbPath);
             var moviesTable = db.Table<MovieContract.MoviesTable>();
@@ -255,12 +305,12 @@ namespace MovieApp.Data
             {
                 case Movies:
                     {
-                        await moviesTable.ToListAsync();
+                        returnQuery = await moviesTable.ToListAsync();
                         break;
                     }
                 case MovieFromId:
                     {
-                        await moviesTable.Where(m => m.MovieId == int.Parse(selection)).ToListAsync();
+                        returnQuery = await moviesTable.Where(m => m.MovieId == int.Parse(selection)).ToListAsync();
                         break;
                     }
                 default:

@@ -54,8 +54,7 @@ namespace MovieApp.Fragments
             {
                 Uri uri = MovieContract.MoviesTable.ContentUri;
                 
-                var moviesRaw = await provider.QueryMovies(uri, null, null, null);
-                var movies = moviesRaw.ToListAsync().Result;
+                var movies = await provider.QueryMovies(uri, null, null, null);
 
                 foreach (var movie in movies)
                 {
@@ -178,8 +177,8 @@ namespace MovieApp.Fragments
 
             await movieHelper.CreateDatabase(typeof(MovieContract.MoviesTable));
             Uri uri = MovieContract.MoviesTable.ContentUri;
-           provider.DeleteRecords(uri, null, null);
-            var results = provider.BulkInsert(uri, movies);
+           await provider.DeleteRecords(uri, null, null);
+           await provider.BulkInsert(uri, movies);
         }
     }
 }

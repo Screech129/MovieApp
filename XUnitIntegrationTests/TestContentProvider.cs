@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -9,7 +9,6 @@ using Android.OS;
 using Android.Runtime;
 using Android.Views;
 using Android.Widget;
-using NUnit.Framework;
 using MovieApp;
 using Uri = Android.Net.Uri;
 using Android.Database;
@@ -20,17 +19,19 @@ using System.IO;
 using System.Threading.Tasks;
 using Android.Util;
 using System.Threading;
+using Xunit;
+using Xunit.Sdk;
 
-namespace IntegrationTests.Data
+namespace XunitIntegrationTest
 {
-    //[TestFixture]
+
     public class TestContentProvider
     {
         public const string LogTag = "TestDb";
         Context context = Application.Context;
         string dbPath = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.Personal), "movie.db3");
-        [SetUp]
-        public void Setup ()
+
+        public TestContentProvider ()
         {
             var dbHelper = new MovieDbHelper(context);
             dbHelper.DeleteDatabase();
@@ -116,17 +117,14 @@ namespace IntegrationTests.Data
             Log.Debug("IfStatement", "This was hit before If");
             try
             {
-                cts.CancelAfter(500);
                 if (dbName == "Movies")
                 {
                     return await db.CreateTableAsync<MovieContract.MoviesTable>();
                 }
                 else
                 {
-                    var test = db.CreateTableAsync<MovieContract.FavoritesTable>();
-                    test.Wait();
-                    Log.Debug("IfStatement", "Return log");
-                    return test.Result;
+                    return await db.CreateTableAsync<MovieContract.FavoritesTable>();
+
                 }
             }
             catch (Exception ex)
@@ -138,96 +136,99 @@ namespace IntegrationTests.Data
 
         }
 
-        [TearDown]
-        public void Tear () { }
-
-        [Test]
+        [Fact]
         public async Task Insert_MockMovie_ReturnAValidId ()
         {
-            var movieDb = CreateDatabase("Movies");
             var id = 0;
-            await movieDb.ContinueWith(t =>
-            {
-                var provider = new MovieProvider();
-                Uri uri = MovieContract.MoviesTable.ContentUri;
-                var returnUri = provider.Insert(uri, MockMovies()).Result;
-                id = int.Parse(returnUri.PathSegments[3]);
 
-            });
-
-            Assert.IsTrue(id > 0);
-        }
-
-        // [Test]
-        public void Query_MovieDataBase_ReturnsAtLeastOneRecord ()
-        {
-            Insert_MockMovie_ReturnAValidId();
-            var provider = new MovieProvider();
-            Uri uri = MovieContract.MoviesTable.ContentUri;
-
-            var results = provider.QueryMovies(uri, null, null, "movie_id");
-            Assert.IsNotNull(results.Result);
-        }
-
-        [Test]
-        public async Task Insert_MockFavorites_ReturnAValidId ()
-        {
-            var id = 0;
-            var favDb = CreateDatabase("Favorites");
-            favDb.Wait();
-            var test = 0;
             var cts = new CancellationTokenSource();
-            //await favDb.ContinueWith(t =>
-            //    {
-
-            //        var provider = new MovieProvider();
-            //        Uri uri = MovieContract.FavoritesTable.ContentUri;
-            //        var returnUriRaw = provider.Insert(uri, MockFavorites());
-            //        var returnUri = returnUriRaw.Result;
-            //        id = int.Parse(returnUri.PathSegments[3]);
-            //    });
             try
             {
-                cts.CancelAfter(30000);
-                var provider = new MovieProvider();
-                Uri uri = MovieContract.FavoritesTable.ContentUri;
-                var returnUriRaw = provider.Insert(uri, MockFavorites());
-                returnUriRaw.Wait(cts.Token);
-                var returnUri = returnUriRaw.Result;
-                id = int.Parse(returnUri.PathSegments[3]);
-                Assert.IsTrue(id > 0);
+                await CreateDatabase("Movies").ContinueWith(async t =>
+                {
+                    var provider = new MovieProvider();
+                    Uri uri = MovieContract.MoviesTable.ContentUri;
+                    var returnUriRaw = await provider.Insert(uri, MockMovies());
+                    var returnUri = returnUriRaw;
+                    id = int.Parse(returnUri.PathSegments[3]);
+                    Assert.True(id > 0);
+                });
             }
             catch (Exception ex)
             {
                 Log.Debug("FavoritesInsert", ex.ToString());
                 throw;
             }
-            
         }
 
-        // [Test]
-        public void BulkInsert_MockMovies_ReturnAValidId ()
+
+        [Fact]
+        public async Task Query_MovieDataBase_ReturnsAtLeastOneRecord ()
         {
-            CreateDatabase("Movies").ContinueWith(t =>
+            await Insert_MockMovie_ReturnAValidId().ContinueWith(async t =>
             {
                 var provider = new MovieProvider();
                 Uri uri = MovieContract.MoviesTable.ContentUri;
-                var returnNum = provider.BulkInsert(uri, MockMovies());
-                var id = returnNum;
-                Assert.IsTrue(id > 0);
+
+                var results = await provider.QueryMovies(uri, null, null, "movie_id");
+                Assert.True(results.Count > 0);
             });
+
         }
 
-        // [Test]
-        public void Query_FavoriteDataBase_ReturnsAtLeastOneRecord ()
+        [Fact]
+        public async Task Insert_MockFavorites_ReturnAValidId ()
         {
-            Insert_MockMovie_ReturnAValidId();
-            var provider = new MovieProvider();
-            Uri uri = MovieContract.FavoritesTable.ContentUri;
+            var id = 0;
 
-            var results = provider.QueryFavorites(uri, null, null, "movie_id");
+            var cts = new CancellationTokenSource();
+            try
+            {
+                await CreateDatabase("Favorites").ContinueWith(async t =>
+                {
+                    var provider = new MovieProvider();
+                    Uri uri = MovieContract.FavoritesTable.ContentUri;
+                    var returnUriRaw = await provider.Insert(uri, MockFavorites());
+                    var returnUri = returnUriRaw;
+                    id = int.Parse(returnUri.PathSegments[3]);
+                    Assert.True(id > 0);
+                });
 
-            Assert.IsNotNull(results.Result);
+            }
+            catch (Exception ex)
+            {
+                Log.Debug("FavoritesInsert", ex.ToString());
+                throw;
+            }
+
+        }
+
+        [Fact]
+        public async Task BulkInsert_MockMovies_ReturnCountGreaterThan0 ()
+        {
+            var returnNum = 0;
+            await CreateDatabase("Movies").ContinueWith(async t =>
+             {
+                 var provider = new MovieProvider();
+                 Uri uri = MovieContract.MoviesTable.ContentUri;
+                 returnNum = await provider.BulkInsert(uri, MockMovies());
+                 Assert.True(returnNum > 0);
+             });
+        }
+
+        [Fact]
+        public async Task Query_FavoriteDataBase_ReturnsAtLeastOneRecord ()
+        {
+            await Insert_MockMovie_ReturnAValidId().ContinueWith(async t =>
+            {
+                var provider = new MovieProvider();
+                Uri uri = MovieContract.FavoritesTable.ContentUri;
+
+                var results = await provider.QueryFavorites(uri, null, null, "movie_id");
+
+                Assert.True(results.Count > 0);
+            });
+
         }
     }
 }
