@@ -60,13 +60,16 @@ namespace MovieApp.Fragments
             string dbPath = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.Personal), "movie.db3");
             var db = new SQLiteAsyncConnection(dbPath);
 
-            var tableExist = MovieDbHelper.TableExists<MovieContract.MoviesTable>(db, "Movies");
-            if (tableExist.Result && db.Table<MovieContract.MoviesTable>().CountAsync().Result > 0)
-            {
-                var provider = new MovieProvider();
-                Android.Net.Uri uri = MovieContract.MoviesTable.ContentUri;
-                await provider.DeleteRecords(uri, null, null);
-            }
+            var tableExist = await MovieDbHelper.TableExists<MovieContract.MoviesTable>(db, "Movies").ContinueWith(async t=> {
+            var movieCount = await db.Table<MovieContract.MoviesTable>().CountAsync();
+                if (tableExist && movieCount > 0)
+                {
+                    var provider = new MovieProvider();
+                    Android.Net.Uri uri = MovieContract.MoviesTable.ContentUri;
+                    await provider.DeleteRecords(uri, null, null);
+                }
+            });
+           
         }
     }
 }

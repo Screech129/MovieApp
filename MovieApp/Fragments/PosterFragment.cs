@@ -30,11 +30,12 @@ namespace MovieApp.Fragments
         List<int> movieIds = new List<int>();
         MovieProvider provider = new MovieProvider();
         static string dbPath = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.Personal), "movie.db3");
-       
+
         public PosterFragment ()
         {
 
         }
+
         public override void OnCreate (Bundle savedInstanceState)
         {
             base.OnCreate(savedInstanceState);
@@ -44,7 +45,14 @@ namespace MovieApp.Fragments
         public override View OnCreateView (LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
         {
             var view = inflater.Inflate(Resource.Layout.fragment_main, container, false);
-            var gridView = view.FindViewById<GridView>(Resource.Id.poster_grid);    
+            var gridView = view.FindViewById<GridView>(Resource.Id.poster_grid);
+            gridView.ItemClick += (sender, e) =>
+            {
+                var movieId = e.Id;
+                var detailsIntent = new Intent(this.Activity, typeof(DetailActivity));
+                detailsIntent.PutExtra(Intent.ExtraText, movieId);
+                StartActivity(detailsIntent);
+            };
             return view;
         }
 
@@ -53,7 +61,7 @@ namespace MovieApp.Fragments
             try
             {
                 Uri uri = MovieContract.MoviesTable.ContentUri;
-                
+
                 var movies = await provider.QueryMovies(uri, null, null, null);
 
                 foreach (var movie in movies)
@@ -80,8 +88,9 @@ namespace MovieApp.Fragments
             paths.Clear();
             var db = new SQLiteAsyncConnection(dbPath);
 
-            var tableExist = MovieDbHelper.TableExists<MovieContract.MoviesTable>(db, "Movies");
-            if (tableExist.Result && db.Table<MovieContract.MoviesTable>().CountAsync().Result > 0)
+            var tableExist = await MovieDbHelper.TableExists<MovieContract.MoviesTable>(db, "Movies");
+            var movieCount = await db.Table<MovieContract.MoviesTable>().CountAsync();
+            if (tableExist && movieCount > 0)
             {
                 await GetCachedMovies(gridView);
             }
@@ -90,15 +99,8 @@ namespace MovieApp.Fragments
                 await GetMovies(gridView);
             }
 
-            gridView.ItemClick += (sender, e) =>
-            {
-                var movieId = e.Id;
-                var detailsIntent = new Intent(this.Activity, typeof(DetailActivity));
-                detailsIntent.PutExtra(Intent.ExtraText, movieId);
-                StartActivity(detailsIntent);
-            };
+           
         }
-
 
         public async Task GetMovies (GridView view)
         {
@@ -131,8 +133,9 @@ namespace MovieApp.Fragments
             }
             var imgAdapter = new ImageAdapter(Activity, paths, movieIds);
             view.Adapter = imgAdapter;
-           await GetMoveInfo(movieIds, paths);
+            await GetMoveInfo(movieIds, paths);
         }
+
         private async Task GetMoveInfo (List<int> movieIds, List<string> paths)
         {
             var httpClient = new HttpClient();
@@ -170,15 +173,19 @@ namespace MovieApp.Fragments
 
         }
 
-
         private async Task CacheMovies (List<MovieContract.MoviesTable> movies)
         {
             var movieHelper = new MovieDbHelper(Application.Context);
 
-            await movieHelper.CreateDatabase(typeof(MovieContract.MoviesTable));
-            Uri uri = MovieContract.MoviesTable.ContentUri;
-           await provider.DeleteRecords(uri, null, null);
-           await provider.BulkInsert(uri, movies);
+            await movieHelper.CreateDatabase(typeof(MovieContract.MoviesTable)).ContinueWith(async t=>
+            {
+                Uri uri = MovieContract.MoviesTable.ContentUri;
+                await provider.DeleteRecords(uri, null, null).ContinueWith(async t2 =>
+                {
+                    await provider.BulkInsert(uri, movies);
+                });
+            });
+           
         }
     }
 }
