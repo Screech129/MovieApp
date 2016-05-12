@@ -20,7 +20,6 @@ using MovieApp.Data;
 using Uri = Android.Net.Uri;
 using System.IO;
 using Android.Database.Sqlite;
-using SQLite;
 
 namespace MovieApp.Fragments
 {
@@ -56,13 +55,13 @@ namespace MovieApp.Fragments
             return view;
         }
 
-        private async Task GetCachedMovies (GridView gridView)
+        private void GetCachedMovies (GridView gridView)
         {
             try
             {
-                Uri uri = MovieContract.MoviesTable.ContentUri;
+                Uri uri = Movie.ContentUri;
 
-                var movies = await provider.QueryMovies(uri, null, null, null);
+                var movies = provider.QueryMovies(uri, null, null, null);
 
                 foreach (var movie in movies)
                 {
@@ -86,20 +85,19 @@ namespace MovieApp.Fragments
             gridView.Adapter = null;
             movieIds.Clear();
             paths.Clear();
-            var db = new SQLiteAsyncConnection(dbPath);
 
-            var tableExist = await MovieDbHelper.TableExists<MovieContract.MoviesTable>(db, "Movies");
-            var movieCount = await db.Table<MovieContract.MoviesTable>().CountAsync();
+            var tableExist = true; //await MovieDbHelper.TableExists<Movie>(db, "Movies");
+            var movieCount = 0; //await db.Table<Movie>().CountAsync();
             if (tableExist && movieCount > 0)
             {
-                await GetCachedMovies(gridView);
+                GetCachedMovies(gridView);
             }
             else
             {
                 await GetMovies(gridView);
             }
 
-           
+
         }
 
         public async Task GetMovies (GridView view)
@@ -111,7 +109,7 @@ namespace MovieApp.Fragments
                 var sortBy = prefs.GetString(Resources.GetString(Resource.String.pref_sort_key), Resources.GetString(Resource.String.pref_sort_default));
                 Task<string> getPopularMoviesJSON = httpClient.GetStringAsync("http://api.themoviedb.org/3/discover/movie?sort_by=" + sortBy + "&api_key=51be394ff82a4dec506f5cf2ce21f6d4");
                 string movieResult = await getPopularMoviesJSON;
-                await GetMoviePosterPaths(movieResult, view);
+                GetMoviePosterPaths(movieResult, view);
 
             }
             catch (Exception ex)
@@ -120,7 +118,7 @@ namespace MovieApp.Fragments
             }
         }
 
-        private async Task GetMoviePosterPaths (string movieResult, GridView view)
+        private void GetMoviePosterPaths (string movieResult, GridView view)
         {
             var pathsJson = new JSONObject(movieResult);
             var pathArray = pathsJson.GetJSONArray("results");
@@ -133,13 +131,13 @@ namespace MovieApp.Fragments
             }
             var imgAdapter = new ImageAdapter(Activity, paths, movieIds);
             view.Adapter = imgAdapter;
-            await GetMoveInfo(movieIds, paths);
+            GetMoveInfo(movieIds, paths);
         }
 
-        private async Task GetMoveInfo (List<int> movieIds, List<string> paths)
+        private void GetMoveInfo (List<int> movieIds, List<string> paths)
         {
             var httpClient = new HttpClient();
-            List<MovieContract.MoviesTable> movieList = new List<MovieContract.MoviesTable>();
+            List<Movie> movieList = new List<Movie>();
             foreach (var movie in movieIds)
             {
                 Task<string> getJSON = httpClient.GetStringAsync("http://api.themoviedb.org/3/movie/" + movie + "?api_key=51be394ff82a4dec506f5cf2ce21f6d4&append_to_response=reviews,trailers");
@@ -150,13 +148,13 @@ namespace MovieApp.Fragments
                 {
                     JSONObject movieInfoJson = new JSONObject(JSONString);
 
-                    var newMovie = new MovieContract.MoviesTable()
+                    var newMovie = new Movie()
                     {
                         MovieTitle = movieInfoJson.GetString("original_title"),
                         PosterPath = movieInfoJson.GetString("poster_path"),
                         Plot = movieInfoJson.GetString("overview"),
                         VoteAverage = movieInfoJson.GetInt("vote_average"),
-                        ReleaseDate = (int)DateTime.Parse(movieInfoJson.GetString("release_date")).Ticks,
+                        ReleaseDate = DateTimeOffset.Parse(movieInfoJson.GetString("release_date")),
                         MovieId = movieInfoJson.GetInt("id"),
                         Reviews = movieInfoJson.GetString("reviews"),
                         Trailers = movieInfoJson.GetString("trailers")
@@ -169,23 +167,16 @@ namespace MovieApp.Fragments
                     Log.Error("DetailActivityJSON", ex.Message);
                 }
             }
-            await CacheMovies(movieList);
+            CacheMovies(movieList);
 
         }
 
-        private async Task CacheMovies (List<MovieContract.MoviesTable> movies)
+        private void CacheMovies (List<Movie> movies)
         {
-            var movieHelper = new MovieDbHelper(Application.Context);
+            Uri uri = Movie.ContentUri;
+            provider.DeleteRecords(uri, null, null);
+            provider.BulkInsert(uri, movies);
 
-            await movieHelper.CreateDatabase(typeof(MovieContract.MoviesTable)).ContinueWith(async t=>
-            {
-                Uri uri = MovieContract.MoviesTable.ContentUri;
-                await provider.DeleteRecords(uri, null, null).ContinueWith(async t2 =>
-                {
-                    await provider.BulkInsert(uri, movies);
-                });
-            });
-           
         }
     }
 }

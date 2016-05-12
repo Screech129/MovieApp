@@ -15,13 +15,13 @@ using Uri = Android.Net.Uri;
 using Android.Database.Sqlite;
 using Java.Lang;
 using System.IO;
-using SQLite;
+using Realms;
 using System.Threading.Tasks;
 using Android.Util;
 
 namespace MovieApp.Data
 {
-    [ContentProvider(new string[] { BaseColumns.ContentAuthority }, Exported = true, Syncable = true)]
+    [ContentProvider(new string[] { Movie.ContentAuthority }, Exported = true, Syncable = true)]
     public class MovieProvider
     {
         private MovieDbHelper movieHelper;
@@ -32,29 +32,12 @@ namespace MovieApp.Data
         public const int FavoriteFromId = 103;
         public static string Authority = "com.silverlining.movieapp"; //context.GetString(Resource.String.content_authority);
         string dbPath = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.Personal), "movie.db3");
-
+        Realm realm;
         public MovieProvider ()
             : base()
         {
-
+            realm = Realm.GetInstance();
         }
-
-        private async Task<List<MovieContract.FavoritesTable>> GetFavoriteMovies (Uri uri, string[] projection, string selection, string[] selectionArgs, string sortOrder)
-        {
-            var db = new SQLiteAsyncConnection(dbPath);
-
-            var moviesTable = db.Table<MovieContract.FavoritesTable>();
-            var movies = await moviesTable.ToListAsync().ContinueWith(m => m);
-            return movies.Result;
-        }
-
-        private AsyncTableQuery<MovieContract.MoviesTable> GetAllMovies (Uri uri, string[] projection, string selection, string[] selectionArgs, string sortOrder)
-        {
-            var db = new SQLiteAsyncConnection(dbPath);
-            var moviesTable = db.Table<MovieContract.MoviesTable>();
-            return moviesTable;
-        }
-
 
         private static int MatchUri (Uri uri)
         {
@@ -83,52 +66,48 @@ namespace MovieApp.Data
             }
             return -1;
         }
-        public async Task<int> DeleteRecords (Uri uri, string selection, string[] selectionArgs)
+        public bool DeleteRecords (Uri uri, string selection, string[] selectionArgs)
         {
-            var db = new SQLiteAsyncConnection(dbPath);
-            var deletedRows = 0;
-
             var match = MatchUri(uri);
-            if (selection == null) selection = "1";
-
+            var hasError = false;
             switch (match)
             {
                 case Favorites:
-                    deletedRows = await db.DeleteAsync(selection);
+                    using (var trans = realm.BeginWrite())
+                    {
+                        try
+                        {
+                            realm.RemoveAll<Favorite>();
+                            trans.Commit();
+                        }
+                        catch (System.Exception)
+                        {
+                            hasError = true;
+                            throw;
+                        }
+
+                    }
                     break;
                 case Movies:
-                    deletedRows = await db.ExecuteAsync("DELETE FROM 'Movies'");
+                    using (var trans = realm.BeginWrite())
+                    {
+                        try
+                        {
+                            realm.RemoveAll<Movie>();
+                            trans.Commit();
+                        }
+                        catch (System.Exception)
+                        {
+                            hasError = true;
+                            throw;
+                        }
+
+                    }
                     break;
                 default:
                     throw new UnsupportedOperationException("Unkown uri: " + uri);
             }
-
-            if (deletedRows > 0 || selection == null) context.ContentResolver.NotifyChange(uri, null);
-            return deletedRows;
-        }
-
-        public int DropTables (Uri uri, string selection, string[] selectionArgs)
-        {
-            var db = new SQLiteAsyncConnection(dbPath);
-            var deletedRows = 0;
-
-            var match = MatchUri(uri);
-            if (selection == null) selection = "1";
-
-            switch (match)
-            {
-                case Favorites:
-                    deletedRows = db.DropTableAsync<MovieContract.FavoritesTable>().Result;
-                    break;
-                case Movies:
-                    deletedRows = db.DropTableAsync<MovieContract.MoviesTable>().Result;
-                    break;
-                default:
-                    throw new UnsupportedOperationException("Unkown uri: " + uri);
-            }
-
-            if (deletedRows > 0 || selection == null) context.ContentResolver.NotifyChange(uri, null);
-            return deletedRows;
+            return hasError;
         }
 
         public string GetType (Uri uri)
@@ -138,21 +117,20 @@ namespace MovieApp.Data
             switch (match)
             {
                 case Favorites:
-                    return MovieContract.FavoritesTable.ContentType;
+                    return Favorite.ContentType;
                 case Movies:
-                    return MovieContract.MoviesTable.ContentType;
+                    return Movie.ContentType;
                 case FavoriteFromId:
-                    return MovieContract.FavoritesTable.ContentItemType;
+                    return Favorite.ContentItemType;
                 case MovieFromId:
-                    return MovieContract.FavoritesTable.ContentItemType;
+                    return Favorite.ContentItemType;
                 default:
                     throw new UnsupportedOperationException("Unknown uri: " + uri);
             }
         }
 
-        public async Task<Uri> Insert<T> (Uri uri, List<T> values)
+        public Uri Insert<T> (Uri uri, List<T> values)
         {
-            var db = new SQLiteAsyncConnection(dbPath);
             Uri returnUri = null;
             int match = MatchUri(uri);
             switch (match)
@@ -162,16 +140,14 @@ namespace MovieApp.Data
                         long _id = 0;
                         try
                         {
-                            var value = (MovieContract.FavoritesTable)(object)values[0];
+                            var value = (Favorite)(object)values[0];
                             try
                             {
-                                await db.InsertAsync(value).ContinueWith(t =>
+                                realm.Write(() =>
                                 {
+                                    var favorite = realm.CreateObject<Favorite>();
+                                    favorite = value;
                                     _id = value.Id;
-                                    if (_id > 0) returnUri = MovieContract.FavoritesTable.BuildUri(_id);
-                                    else throw new SQLException("Failed to insert row into " + uri);
-                                    context.ContentResolver.NotifyChange(uri, null);
-                                    return returnUri;
                                 });
                             }
                             catch (System.Exception ex)
@@ -179,7 +155,7 @@ namespace MovieApp.Data
                                 Log.Debug("SQLException", ex.ToString());
                                 throw;
                             }
-                           
+
 
                         }
                         catch (System.Exception ex)
@@ -196,14 +172,12 @@ namespace MovieApp.Data
                         long _id = 0;
                         try
                         {
-                            var value = (MovieContract.MoviesTable)(object)values[0];
-                            await db.InsertAsync(value).ContinueWith(t =>
+                            var value = (Movie)(object)values[0];
+                            realm.Write(() =>
                             {
+                                var movie = realm.CreateObject<Movie>();
+                                movie = value;
                                 _id = value.Id;
-                                if (_id > 0) returnUri = MovieContract.MoviesTable.BuildUri(_id);
-                                else throw new SQLException("Failed to insert row into " + uri);
-                                context.ContentResolver.NotifyChange(uri, null);
-                                return returnUri;
                             });
 
                         }
@@ -222,10 +196,8 @@ namespace MovieApp.Data
             return returnUri;
         }
 
-        public async Task<int> BulkInsert (Uri uri, List<MovieContract.MoviesTable> values)
+        public int BulkInsert (Uri uri, List<Movie> values)
         {
-            var db = new SQLiteAsyncConnection(dbPath);
-            var table = db.Table<MovieContract.MoviesTable>();
             int match = MatchUri(uri);
 
             switch (match)
@@ -234,20 +206,18 @@ namespace MovieApp.Data
                     int returnCount = 0;
                     try
                     {
-                        long _id = -1;
-                       await db.RunInTransactionAsync(async (SQLiteConnection conn) =>
-                        {
-                            foreach (MovieContract.MoviesTable value in values)
-                            {
-                                await db.InsertAsync(value).ContinueWith(t =>
-                                {
-                                    _id = t.Id;
-                                    if (_id != -1) returnCount++;
-                                });
-                            }
-                            conn.Close();
-                        });
+                        long _id = 0;
 
+                        using (var trans = realm.BeginWrite())
+                        {
+                            foreach (Movie value in values)
+                            {
+                                var movie = realm.CreateObject<Movie>();
+                                movie = value;
+                                _id = value.Id;
+                                if (_id > 0) returnCount++;
+                            }
+                        };
                         context.ContentResolver.NotifyChange(uri, null);
                         return returnCount;
                     }
@@ -270,22 +240,20 @@ namespace MovieApp.Data
             return true;
         }
 
-        public async Task<List<MovieContract.FavoritesTable>> QueryFavorites (Uri uri, string[] projection, string selection, string sortOrder)
+        public RealmResults<Favorite> QueryFavorites (Uri uri, string[] projection, string selection, string sortOrder)
         {
-            List<MovieContract.FavoritesTable> returnQuery = null;
             var match = MatchUri(uri);
-            var db = new SQLiteAsyncConnection(dbPath);
-            var moviesTable = db.Table<MovieContract.FavoritesTable>();
+            RealmResults<Favorite> returnQuery = null;
             switch (match)
             {
                 case Favorites:
                     {
-                        await moviesTable.ToListAsync();
+                        returnQuery = realm.All<Favorite>();
                         break;
                     }
                 case FavoriteFromId:
                     {
-                        await moviesTable.Where(m => m.MovieId == int.Parse(selection)).ToListAsync();
+                        returnQuery = (RealmResults<Favorite>)realm.All<Favorite>().Where(f => f.MovieId == int.Parse(selection));
                         break;
                     }
                 default:
@@ -295,50 +263,29 @@ namespace MovieApp.Data
             return returnQuery;
         }
 
-        public async Task<List<MovieContract.MoviesTable>> QueryMovies (Uri uri, string[] projection, string selection, string sortOrder)
+        public RealmResults<Movie> QueryMovies (Uri uri, string[] projection, string selection, string sortOrder)
         {
-            List<MovieContract.MoviesTable> returnQuery = null;
             var match = MatchUri(uri);
-            var db = new SQLiteAsyncConnection(dbPath);
-            var moviesTable = db.Table<MovieContract.MoviesTable>();
-            switch (match)
-            {
-                case Movies:
-                    {
-                        returnQuery = await moviesTable.ToListAsync();
-                        break;
-                    }
-                case MovieFromId:
-                    {
-                        returnQuery = await moviesTable.Where(m => m.MovieId == int.Parse(selection)).ToListAsync();
-                        break;
-                    }
-                default:
-                    break;
-            }
-            context.ContentResolver.NotifyChange(uri, null);
-            return returnQuery;
-        }
-
-        public int Update (Uri uri, ContentValues values, string selection, string[] selectionArgs)
-        {
-            var db = new SQLiteAsyncConnection(dbPath);
-            var updatedRows = 0;
-            var match = MatchUri(uri);
-
+            RealmResults<Movie> returnQuery = null;
             switch (match)
             {
                 case Favorites:
-                    updatedRows = db.UpdateAsync(values).Result;
-                    break;
-                case Movies:
-                    updatedRows = db.UpdateAsync(values).Result;
-                    break;
+                    {
+                        returnQuery = realm.All<Movie>();
+                        break;
+                    }
+                case FavoriteFromId:
+                    {
+                        returnQuery = (RealmResults<Movie>)realm.All<Movie>().Where(f => f.MovieId == int.Parse(selection));
+                        break;
+                    }
                 default:
-                    throw new UnsupportedOperationException("Unknown uri: " + uri);
+                    break;
             }
-            if (updatedRows > 0 || selection == null) context.ContentResolver.NotifyChange(uri, null);
-            return updatedRows;
+            context.ContentResolver.NotifyChange(uri, null);
+            return returnQuery;
         }
+
+
     }
 }
