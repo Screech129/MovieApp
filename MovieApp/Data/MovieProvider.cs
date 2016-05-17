@@ -245,7 +245,6 @@ namespace MovieApp.Data
                                     if (_id != -1) returnCount++;
                                 });
                             }
-                            conn.Close();
                         });
 
                         context.ContentResolver.NotifyChange(uri, null);
@@ -301,6 +300,7 @@ namespace MovieApp.Data
             var match = MatchUri(uri);
             var db = new SQLiteAsyncConnection(dbPath);
             var moviesTable = db.Table<MovieContract.MoviesTable>();
+  
             switch (match)
             {
                 case Movies:
@@ -310,7 +310,18 @@ namespace MovieApp.Data
                     }
                 case MovieFromId:
                     {
-                        returnQuery = await moviesTable.Where(m => m.MovieId == int.Parse(selection)).ToListAsync();
+                        try
+                        {
+                            var movieId = int.Parse(selection);
+                            var test = moviesTable.Where(m => m.MovieId == movieId);
+                            returnQuery = test.ToListAsync().Result;
+                        }
+                        catch (System.Exception ex)
+                        {
+                            Log.Debug("SQLException", ex.ToString());
+                            throw;
+                        }
+                        
                         break;
                     }
                 default:

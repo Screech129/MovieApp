@@ -88,9 +88,13 @@ namespace MovieApp.Fragments
             paths.Clear();
             var db = new SQLiteAsyncConnection(dbPath);
 
-            var tableExist = await MovieDbHelper.TableExists<MovieContract.MoviesTable>(db, "Movies");
-            var movieCount = await db.Table<MovieContract.MoviesTable>().CountAsync();
-            if (tableExist && movieCount > 0)
+            var tableExist = await MovieDbHelper.TableExists(db, "Movies");
+            var movieCount = 0;
+            if (tableExist)
+            {
+                movieCount = await db.Table<MovieContract.MoviesTable>().CountAsync();
+            }
+            if (movieCount > 0)
             {
                 await GetCachedMovies(gridView);
             }
@@ -99,7 +103,7 @@ namespace MovieApp.Fragments
                 await GetMovies(gridView);
             }
 
-           
+
         }
 
         public async Task GetMovies (GridView view)
@@ -140,29 +144,50 @@ namespace MovieApp.Fragments
         {
             var httpClient = new HttpClient();
             List<MovieContract.MoviesTable> movieList = new List<MovieContract.MoviesTable>();
+            var count = 0;
             foreach (var movie in movieIds)
             {
                 Task<string> getJSON = httpClient.GetStringAsync("http://api.themoviedb.org/3/movie/" + movie + "?api_key=51be394ff82a4dec506f5cf2ce21f6d4&append_to_response=reviews,trailers");
                 var movieInfoStringBuilder = new StringBuilder();
                 movieInfoStringBuilder.Append(getJSON.Result);
                 var JSONString = movieInfoStringBuilder.ToString();
+                var trailerObjects = new List<object>();
                 try
                 {
                     JSONObject movieInfoJson = new JSONObject(JSONString);
+                    var trailerInfo = new JSONObject(movieInfoJson.GetString("trailers"));
+                    var youTubeInfo = new JSONArray(trailerInfo.GetString("youtube"));
+ 
+                    for (var i=0;i<youTubeInfo.Length();i++)
+                    {
+                        var jsonInfo = new JSONObject(youTubeInfo.GetString(i));
+                        var trailer = new {
+                            MovieId = movieInfoJson.GetInt("id"),
+                            Name = jsonInfo.GetString("name"),
+                            Path = jsonInfo.GetString("source")
+                        };
 
+                        trailerObjects.Add(trailer);
+                    }
                     var newMovie = new MovieContract.MoviesTable()
                     {
                         MovieTitle = movieInfoJson.GetString("original_title"),
-                        PosterPath = movieInfoJson.GetString("poster_path"),
+                        PosterPath = paths[count],
                         Plot = movieInfoJson.GetString("overview"),
                         VoteAverage = movieInfoJson.GetInt("vote_average"),
-                        ReleaseDate = (int)DateTime.Parse(movieInfoJson.GetString("release_date")).Ticks,
+                        ReleaseDate = DateTime.Parse(movieInfoJson.GetString("release_date")),
                         MovieId = movieInfoJson.GetInt("id"),
                         Reviews = movieInfoJson.GetString("reviews"),
-                        Trailers = movieInfoJson.GetString("trailers")
                     };
+                    foreach (var trailer in trailerObjects)
+                    {
+                        Type t = trailer.GetType();
+                        newMovie.Trailers += t.GetProperty("Name").GetValue(trailer)+ ": www.youtube.com/" + t.GetProperty("Path").GetValue(trailer) +",";
+                    }
+                    
+                    
                     movieList.Add(newMovie);
-
+                    count++;
                 }
                 catch (Exception ex)
                 {
@@ -177,7 +202,7 @@ namespace MovieApp.Fragments
         {
             var movieHelper = new MovieDbHelper(Application.Context);
 
-            await movieHelper.CreateDatabase(typeof(MovieContract.MoviesTable)).ContinueWith(async t=>
+            await movieHelper.CreateTable(typeof(MovieContract.MoviesTable)).ContinueWith(async t =>
             {
                 Uri uri = MovieContract.MoviesTable.ContentUri;
                 await provider.DeleteRecords(uri, null, null).ContinueWith(async t2 =>
@@ -185,7 +210,7 @@ namespace MovieApp.Fragments
                     await provider.BulkInsert(uri, movies);
                 });
             });
-           
+
         }
     }
 }

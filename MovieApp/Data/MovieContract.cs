@@ -49,12 +49,11 @@ namespace MovieApp.Data
             public string PosterPath { get; set; }
 
             [NotNull]
-            public int ReleaseDate { get; set; }
+            public DateTime ReleaseDate { get; set; }
 
             [NotNull]
             public string Reviews { get; set; }
 
-            [NotNull]
             public string Trailers { get; set; }
 
             [NotNull]
@@ -92,12 +91,11 @@ namespace MovieApp.Data
             public string PosterPath { get; set; }
 
             [NotNull]
-            public int ReleaseDate { get; set; }
+            public DateTime ReleaseDate { get; set; }
 
             [NotNull]
             public string Reviews { get; set; }
 
-            [NotNull]
             public string Trailers { get; set; }
 
             [NotNull]

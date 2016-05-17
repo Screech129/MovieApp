@@ -82,14 +82,14 @@ namespace MovieApp
 		public partial class Id
 		{
 			
-			// aapt resource value: 0x7f0a0011
-			public const int action_settings = 2131361809;
+			// aapt resource value: 0x7f0a0012
+			public const int action_settings = 2131361810;
 			
 			// aapt resource value: 0x7f0a0000
 			public const int container = 2131361792;
 			
-			// aapt resource value: 0x7f0a0010
-			public const int fragment_poster = 2131361808;
+			// aapt resource value: 0x7f0a0011
+			public const int fragment_poster = 2131361809;
 			
 			// aapt resource value: 0x7f0a0005
 			public const int moviePoster = 2131361797;
@@ -103,8 +103,8 @@ namespace MovieApp
 			// aapt resource value: 0x7f0a0008
 			public const int plot_text = 2131361800;
 			
-			// aapt resource value: 0x7f0a000f
-			public const int poster_grid = 2131361807;
+			// aapt resource value: 0x7f0a0010
+			public const int poster_grid = 2131361808;
 			
 			// aapt resource value: 0x7f0a0004
 			public const int poster_layout = 2131361796;
@@ -135,6 +135,9 @@ namespace MovieApp
 			
 			// aapt resource value: 0x7f0a0003
 			public const int title_text = 2131361795;
+			
+			// aapt resource value: 0x7f0a000f
+			public const int trailer_layout = 2131361807;
 			
 			static Id()
 			{
@@ -206,14 +209,14 @@ namespace MovieApp
 		public partial class String
 		{
 			
-			// aapt resource value: 0x7f06000a
-			public const int action_settings = 2131099658;
+			// aapt resource value: 0x7f06000b
+			public const int action_settings = 2131099659;
 			
 			// aapt resource value: 0x7f060001
 			public const int app_name = 2131099649;
 			
-			// aapt resource value: 0x7f060010
-			public const int content_authority = 2131099664;
+			// aapt resource value: 0x7f060011
+			public const int content_authority = 2131099665;
 			
 			// aapt resource value: 0x7f060000
 			public const int hello = 2131099648;
@@ -224,20 +227,20 @@ namespace MovieApp
 			// aapt resource value: 0x7f060005
 			public const int plot_text = 2131099653;
 			
-			// aapt resource value: 0x7f06000c
-			public const int pref_sortDialog_label = 2131099660;
-			
-			// aapt resource value: 0x7f06000f
-			public const int pref_sort_default = 2131099663;
-			
 			// aapt resource value: 0x7f06000d
-			public const int pref_sort_key = 2131099661;
+			public const int pref_sortDialog_label = 2131099661;
 			
-			// aapt resource value: 0x7f06000b
-			public const int pref_sort_label = 2131099659;
+			// aapt resource value: 0x7f060010
+			public const int pref_sort_default = 2131099664;
 			
 			// aapt resource value: 0x7f06000e
-			public const int pref_sort_summary = 2131099662;
+			public const int pref_sort_key = 2131099662;
+			
+			// aapt resource value: 0x7f06000c
+			public const int pref_sort_label = 2131099660;
+			
+			// aapt resource value: 0x7f06000f
+			public const int pref_sort_summary = 2131099663;
 			
 			// aapt resource value: 0x7f060006
 			public const int rating_label = 2131099654;
@@ -256,6 +259,9 @@ namespace MovieApp
 			
 			// aapt resource value: 0x7f060003
 			public const int title_text = 2131099651;
+			
+			// aapt resource value: 0x7f06000a
+			public const int trailer_label = 2131099658;
 			
 			static String()
 			{

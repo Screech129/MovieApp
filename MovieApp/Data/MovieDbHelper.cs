@@ -17,7 +17,7 @@ namespace MovieApp.Data
 
         }
 
-        public async Task CreateDatabase (Type tableToCreate)
+        public async Task CreateTable (Type tableToCreate)
         {
             string dbPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Personal),"movie.db3");
             var db = new SQLiteAsyncConnection(dbPath);
@@ -30,10 +30,11 @@ namespace MovieApp.Data
             File.Delete(dbPath);
         }
 
-        public async static Task<bool> TableExists<T> (SQLiteAsyncConnection connection, string tableName)
+        public async static Task<bool> TableExists (SQLiteAsyncConnection connection, string tableName)
         {
             try
             {
+                
                 const string cmdText = "SELECT name FROM sqlite_master WHERE type='table' AND name=?";
                 return await connection.ExecuteScalarAsync<string>(cmdText,tableName) != null;
             }

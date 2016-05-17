@@ -57,9 +57,9 @@ namespace MovieApp
             if(convertView == null){
             //if it's not recycled, initialize some attributes
                 imageView = new ImageView(context);
-                imageView.LayoutParameters = new GridView.LayoutParams(GridView.LayoutParams.WrapContent,GridView.LayoutParams.WrapContent);
+                imageView.LayoutParameters = new AbsListView.LayoutParams(300, 400);
                 imageView.SetScaleType(ImageView.ScaleType.CenterCrop);
-                imageView.SetPadding(8,8,8,8);
+                imageView.SetPadding(2,2,2,2);
               
             
             }else{
