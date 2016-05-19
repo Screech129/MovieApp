@@ -22,7 +22,7 @@ namespace MovieApp.Activities
             base.OnCreate(savedInstanceState);
 
             SetContentView(Resource.Layout.activity_detail);
-            FragmentTransaction fragTx = this.FragmentManager.BeginTransaction();
+            var fragTx = this.FragmentManager.BeginTransaction();
 
             fragTx.Replace(Resource.Id.container, new SettingsFragment()).Commit();
         }

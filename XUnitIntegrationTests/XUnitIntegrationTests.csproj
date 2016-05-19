@@ -179,7 +179,7 @@
       <Name>Core</Name>
     </ProjectReference>
     <ProjectReference Include="..\Model\Model.csproj">
-      <Project>{48F85374-7746-472D-8CB4-0CEC08BA178D}</Project>
+      <Project>{6a8162a8-4e8d-4116-a238-8e913daa9a98}</Project>
       <Name>Model</Name>
     </ProjectReference>
     <ProjectReference Include="..\MovieApp\MovieApp.csproj">

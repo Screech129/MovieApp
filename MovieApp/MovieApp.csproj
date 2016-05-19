@@ -131,7 +131,7 @@
       <Name>Core</Name>
     </ProjectReference>
     <ProjectReference Include="..\Model\Model.csproj">
-      <Project>{48f85374-7746-472d-8cb4-0cec08ba178d}</Project>
+      <Project>{6A8162A8-4E8D-4116-A238-8E913DAA9A98}</Project>
       <Name>Model</Name>
     </ProjectReference>
   </ItemGroup>

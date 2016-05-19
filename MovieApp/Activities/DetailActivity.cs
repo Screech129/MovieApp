@@ -16,7 +16,7 @@ namespace MovieApp.Activities
             ActionBar.Title = "Movie Details";
             if (savedInstanceState == null)
             {
-                FragmentTransaction fragTx = this.FragmentManager.BeginTransaction();
+                var fragTx = this.FragmentManager.BeginTransaction();
 
                 fragTx.Add(Resource.Id.container, new DetailFragment())
                     .Commit();
@@ -25,7 +25,7 @@ namespace MovieApp.Activities
 
         public override bool OnOptionsItemSelected (IMenuItem item)
         {
-            int id = item.ItemId;
+            var id = item.ItemId;
             if (id == Android.Resource.Id.Home)
             {
                 Finish();

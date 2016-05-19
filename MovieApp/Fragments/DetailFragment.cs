@@ -29,8 +29,8 @@ namespace MovieApp.Fragments
 
         public override View OnCreateView (LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
         {
-            Intent intent = Activity.Intent;
-            View rootView = inflater.Inflate(Resource.Layout.fragment_detail, container, false);
+            var intent = Activity.Intent;
+            var rootView = inflater.Inflate(Resource.Layout.fragment_detail, container, false);
             if (intent != null && intent.HasExtra(Intent.ExtraText))
             {
                 var movieId = intent.GetLongExtra(Intent.ExtraText, 0);
@@ -72,9 +72,9 @@ namespace MovieApp.Fragments
                 }
 
                 var trailerAdapter = new ArrayAdapter(Activity, Android.Resource.Layout.SimpleExpandableListItem1, Android.Resource.Id.Text1, trailerNameList);
-                for (int i = 0; i < trailerAdapter.Count; i++)
+                for (var i = 0; i < trailerAdapter.Count; i++)
                 {
-                    View view = trailerAdapter.GetView(i, null, movieTrailerLL);
+                    var view = trailerAdapter.GetView(i, null, movieTrailerLL);
                     view.SetPadding(0, 10, 0, 5);
                     
                     view.Tag = trailerList[i].Split(':')[1];
@@ -85,7 +85,7 @@ namespace MovieApp.Fragments
                         Log.Debug("ClickedView", clickedView.Tag.ToString());
                         OpenTrailer(clickedView.Tag.ToString());
                     };
-                    View dividerView = new View(Activity);
+                    var dividerView = new View(Activity);
                     dividerView.SetMinimumHeight(1);
                     dividerView.SetBackgroundColor(Android.Graphics.Color.DarkGray);
 
@@ -97,7 +97,7 @@ namespace MovieApp.Fragments
 
         private async Task<List<Movies>> GetMoveInfo (long movieId)
         {
-            string dbPath = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.Personal), "movie.db3");
+            var dbPath = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.Personal), "movie.db3");
             var connString = new SQLiteConnectionString(dbPath, false);
             var conn = new SQLiteConnectionWithLock(new SQLitePlatformAndroid(), connString);
             var db = new SQLiteAsyncConnection(() => conn);

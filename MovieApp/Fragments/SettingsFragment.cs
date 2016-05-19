@@ -25,7 +25,7 @@ namespace MovieApp.Fragments
             AddPreferencesFromResource(Resource.Xml.pref_general);
             foreach (var key in PreferenceManager.GetDefaultSharedPreferences(Activity).All.Keys)
             {
-                Preference pref = FindPreference(key);
+                var pref = FindPreference(key);
                 if (pref.GetType() == typeof(ListPreference))
                 {
                     var listPref = (ListPreference)pref;
@@ -54,7 +54,7 @@ namespace MovieApp.Fragments
 
         public async void OnSharedPreferenceChanged (ISharedPreferences sharedPreferences, string key)
         {
-            Preference pref = FindPreference(key);
+            var pref = FindPreference(key);
             if (pref.GetType() == typeof(ListPreference))
             {
                 var listPref = (ListPreference)pref;
@@ -75,11 +75,11 @@ namespace MovieApp.Fragments
 
         private static async Task RefreshDatabase ()
         {
-            string dbPath = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.Personal), "movie.db3");
+            var dbPath = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.Personal), "movie.db3");
 
-            SQLiteConnectionString connString = new SQLiteConnectionString(dbPath, false);
-            SQLiteConnectionWithLock conn = new SQLiteConnectionWithLock(new SQLitePlatformAndroid(), connString);
-            SQLiteAsyncConnection db = new SQLiteAsyncConnection(() => conn);
+            var connString = new SQLiteConnectionString(dbPath, false);
+            var conn = new SQLiteConnectionWithLock(new SQLitePlatformAndroid(), connString);
+            var db = new SQLiteAsyncConnection(() => conn);
 
             var helper = new MovieDbHelper(db);
             var tableExist = await helper.TableExists("Movies");
@@ -91,7 +91,7 @@ namespace MovieApp.Fragments
             if (movieCount > 0)
             {
                 var provider = new MovieProvider(db);
-                Uri uri = Movies.ContentUri;
+                var uri = Movies.ContentUri;
                 await provider.DeleteRecords(uri, null, null);
             }
         }

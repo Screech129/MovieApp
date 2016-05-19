@@ -1,33 +1,30 @@
 ﻿using System;
 using System.Collections.Generic;
-
+using System.IO;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using Android.App;
 using Android.Content;
-using SQLite;
-using System.IO;
-using System.Threading.Tasks;
 using Android.Util;
-using System.Threading;
-using Xunit;
-using Model;
 using Core;
+using Model;
 using SQLite.Net;
 using SQLite.Net.Async;
 using SQLite.Net.Platform.XamarinAndroid;
-using System.Linq;
+using Xunit;
 
-namespace XunitIntegrationTest
+namespace XUnitIntegrationTests
 {
 
     public class TestContentProvider
     {
         public const string LogTag = "TestDb";
-        Context context = Application.Context;
-        static string dbPath = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.Personal), "movie.db3");
+        private static string dbPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Personal), "movie.db3");
 
-        static SQLiteConnectionString connString = new SQLiteConnectionString(dbPath, false);
-        static SQLiteConnectionWithLock conn = new SQLiteConnectionWithLock(new SQLitePlatformAndroid(), connString);
-        static SQLiteAsyncConnection db = new SQLiteAsyncConnection(() => conn);
+        private static SQLiteConnectionString connString = new SQLiteConnectionString(dbPath, false);
+        private static SQLiteConnectionWithLock conn = new SQLiteConnectionWithLock(new SQLitePlatformAndroid(), connString);
+        private static SQLiteAsyncConnection db = new SQLiteAsyncConnection(() => conn);
 
         public TestContentProvider ()
         {

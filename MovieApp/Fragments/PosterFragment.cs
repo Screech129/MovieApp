@@ -15,7 +15,6 @@ using Org.Json;
 using Android.Preferences;
 using MovieApp.Activities;
 using System.IO;
-using SQLite;
 using Core;
 using Model;
 using SQLite.Net.Async;
@@ -26,14 +25,14 @@ namespace MovieApp.Fragments
 {
     public class PosterFragment : Fragment
     {
-        List<string> paths = new List<string>();
-        List<int> movieIds = new List<int>();
-        static string dbPath = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.Personal), "movie.db3");
-        static SQLiteConnectionString connString = new SQLiteConnectionString(dbPath, false);
-        static SQLiteConnectionWithLock conn = new SQLiteConnectionWithLock(new SQLitePlatformAndroid(), connString);
-        static SQLiteAsyncConnection db = new SQLiteAsyncConnection(() => conn);
+        private List<string> paths = new List<string>();
+        private List<int> movieIds = new List<int>();
+        private static string dbPath = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.Personal), "movie.db3");
+        private static SQLiteConnectionString connString = new SQLiteConnectionString(dbPath, false);
+        private static SQLiteConnectionWithLock conn = new SQLiteConnectionWithLock(new SQLitePlatformAndroid(), connString);
+        private static SQLiteAsyncConnection db = new SQLiteAsyncConnection(() => conn);
 
-        MovieProvider provider = new MovieProvider(db);
+        private MovieProvider provider = new MovieProvider(db);
 
         public PosterFragment ()
         {
@@ -64,7 +63,7 @@ namespace MovieApp.Fragments
         {
             try
             {
-                Uri uri = Movies.ContentUri;
+                var uri = Movies.ContentUri;
 
                 var movies = await provider.Query<Movies>(uri);
 
@@ -118,10 +117,10 @@ namespace MovieApp.Fragments
             try
             {
                 var httpClient = new HttpClient();
-                ISharedPreferences prefs = PreferenceManager.GetDefaultSharedPreferences(Activity);
+                var prefs = PreferenceManager.GetDefaultSharedPreferences(Activity);
                 var sortBy = prefs.GetString(Resources.GetString(Resource.String.pref_sort_key), Resources.GetString(Resource.String.pref_sort_default));
-                Task<string> getPopularMoviesJSON = httpClient.GetStringAsync("http://api.themoviedb.org/3/discover/movie?sort_by=" + sortBy + "&api_key=51be394ff82a4dec506f5cf2ce21f6d4");
-                string movieResult = await getPopularMoviesJSON;
+                var getPopularMoviesJSON = httpClient.GetStringAsync("http://api.themoviedb.org/3/discover/movie?sort_by=" + sortBy + "&api_key=51be394ff82a4dec506f5cf2ce21f6d4");
+                var movieResult = await getPopularMoviesJSON;
                 await GetMoviePosterPaths(movieResult, view);
 
             }
@@ -150,18 +149,18 @@ namespace MovieApp.Fragments
         private async Task GetMoveInfo (List<int> movieIds, List<string> paths)
         {
             var httpClient = new HttpClient();
-            List<Movies> movieList = new List<Movies>();
+            var movieList = new List<Movies>();
             var count = 0;
             foreach (var movie in movieIds)
             {
-                Task<string> getJSON = httpClient.GetStringAsync("http://api.themoviedb.org/3/movie/" + movie + "?api_key=51be394ff82a4dec506f5cf2ce21f6d4&append_to_response=reviews,trailers");
+                var getJSON = httpClient.GetStringAsync("http://api.themoviedb.org/3/movie/" + movie + "?api_key=51be394ff82a4dec506f5cf2ce21f6d4&append_to_response=reviews,trailers");
                 var movieInfoStringBuilder = new StringBuilder();
                 movieInfoStringBuilder.Append(getJSON.Result);
                 var JSONString = movieInfoStringBuilder.ToString();
                 var trailerObjects = new List<object>();
                 try
                 {
-                    JSONObject movieInfoJson = new JSONObject(JSONString);
+                    var movieInfoJson = new JSONObject(JSONString);
                     var trailerInfo = new JSONObject(movieInfoJson.GetString("trailers"));
                     var youTubeInfo = new JSONArray(trailerInfo.GetString("youtube"));
  
@@ -188,7 +187,7 @@ namespace MovieApp.Fragments
                     };
                     foreach (var trailer in trailerObjects)
                     {
-                        Type t = trailer.GetType();
+                        var t = trailer.GetType();
                         newMovie.Trailers += t.GetProperty("Name").GetValue(trailer)+ ": www.youtube.com/" + t.GetProperty("Path").GetValue(trailer) +",";
                     }
                     
@@ -211,7 +210,7 @@ namespace MovieApp.Fragments
 
             await movieHelper.CreateTable(typeof(Movies)).ContinueWith(async t =>
             {
-                Uri uri = Movies.ContentUri;
+                var uri = Movies.ContentUri;
                 await provider.DeleteRecords(uri, null, null).ContinueWith(async t2 =>
                 {
                     await provider.Insert(uri, movies);

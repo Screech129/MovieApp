@@ -28,7 +28,7 @@ namespace MovieApp.Activities
 
         public override bool OnMenuItemSelected(int featureId, IMenuItem item)
         {
-            int id = item.ItemId;
+            var id = item.ItemId;
             if (id == Resource.Id.action_settings)
             {
                 StartActivity(new Intent(this, typeof(SettingsActivity)));
