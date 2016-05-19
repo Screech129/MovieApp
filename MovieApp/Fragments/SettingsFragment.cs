@@ -1,19 +1,13 @@
-﻿
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
-using Android.App;
-using Android.Content;
+﻿using Android.Content;
 using Android.OS;
-using Android.Runtime;
-using Android.Util;
-using Android.Views;
-using Android.Widget;
 using Android.Preferences;
-using MovieApp.Data;
+using Core;
+using Model;
 using SQLite;
+using SQLite.Net;
+using SQLite.Net.Async;
+using SQLite.Net.Platform.XamarinAndroid;
+using System;
 using System.IO;
 using System.Threading.Tasks;
 
@@ -82,17 +76,22 @@ namespace MovieApp.Fragments
         private static async Task RefreshDatabase ()
         {
             string dbPath = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.Personal), "movie.db3");
-            var db = new SQLiteAsyncConnection(dbPath);
-            var tableExist = await MovieDbHelper.TableExists(db, "Movies");
+
+            SQLiteConnectionString connString = new SQLiteConnectionString(dbPath, false);
+            SQLiteConnectionWithLock conn = new SQLiteConnectionWithLock(new SQLitePlatformAndroid(), connString);
+            SQLiteAsyncConnection db = new SQLiteAsyncConnection(() => conn);
+
+            var helper = new MovieDbHelper(db);
+            var tableExist = await helper.TableExists("Movies");
             var movieCount = 0;
             if (tableExist)
             {
-                movieCount = await db.Table<MovieContract.MoviesTable>().CountAsync();
+                movieCount = await helper.CountRows<Movies>();
             }
             if (movieCount > 0)
             {
-                var provider = new MovieProvider();
-                Android.Net.Uri uri = MovieContract.MoviesTable.ContentUri;
+                var provider = new MovieProvider(db);
+                Uri uri = Movies.ContentUri;
                 await provider.DeleteRecords(uri, null, null);
             }
         }

@@ -1,19 +1,22 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
 using Android.App;
 using Android.Content;
 using Android.OS;
-using Android.Runtime;
 using Android.Util;
 using Android.Views;
 using Android.Widget;
-using MovieApp.Data;
 using Square.Picasso;
 using System.Threading.Tasks;
 using Uri = Android.Net.Uri;
+using Model;
+using Core;
+using SQLite.Net;
+using SQLite.Net.Platform.XamarinAndroid;
+using SQLite.Net.Async;
+using System.IO;
 
 namespace MovieApp.Fragments
 {
@@ -38,7 +41,7 @@ namespace MovieApp.Fragments
             return rootView;
         }
 
-        private void BindFields (View rootView, MovieContract.MoviesTable movieInfo)
+        private void BindFields (View rootView, Movies movieInfo)
         {
             var titleTV = rootView.FindViewById<TextView>(Resource.Id.title_text);
             titleTV.Text = movieInfo.MovieTitle;
@@ -54,7 +57,7 @@ namespace MovieApp.Fragments
             BindTrailers(rootView, movieInfo);
         }
 
-        private void BindTrailers (View rootView, MovieContract.MoviesTable movieInfo)
+        private void BindTrailers (View rootView, Movies movieInfo)
         {
             var movieTrailerLL = rootView.FindViewById<LinearLayout>(Resource.Id.trailer_layout);
             if (!string.IsNullOrEmpty(movieInfo.Trailers))
@@ -92,11 +95,16 @@ namespace MovieApp.Fragments
             }
         }
 
-        private async Task<List<MovieContract.MoviesTable>> GetMoveInfo (long movieId)
+        private async Task<List<Movies>> GetMoveInfo (long movieId)
         {
-            var provider = new MovieProvider();
-            var uri = MovieContract.MoviesTable.BuildUri(movieId);
-            var movieList = await provider.QueryMovies(uri, null, movieId.ToString(), null);
+            string dbPath = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.Personal), "movie.db3");
+            var connString = new SQLiteConnectionString(dbPath, false);
+            var conn = new SQLiteConnectionWithLock(new SQLitePlatformAndroid(), connString);
+            var db = new SQLiteAsyncConnection(() => conn);
+
+            var provider = new MovieProvider(db);
+            var uri = Movies.BuildUri(movieId);
+            var movieList = await provider.Query<Movies>(uri);
             return movieList;
         }
 

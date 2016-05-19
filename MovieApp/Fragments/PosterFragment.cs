@@ -1,13 +1,11 @@
 ﻿
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 
 using Android.App;
 using Android.Content;
 using Android.OS;
-using Android.Runtime;
 using Android.Util;
 using Android.Views;
 using Android.Widget;
@@ -16,11 +14,13 @@ using System.Net.Http;
 using Org.Json;
 using Android.Preferences;
 using MovieApp.Activities;
-using MovieApp.Data;
-using Uri = Android.Net.Uri;
 using System.IO;
-using Android.Database.Sqlite;
 using SQLite;
+using Core;
+using Model;
+using SQLite.Net.Async;
+using SQLite.Net;
+using SQLite.Net.Platform.XamarinAndroid;
 
 namespace MovieApp.Fragments
 {
@@ -28,8 +28,12 @@ namespace MovieApp.Fragments
     {
         List<string> paths = new List<string>();
         List<int> movieIds = new List<int>();
-        MovieProvider provider = new MovieProvider();
         static string dbPath = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.Personal), "movie.db3");
+        static SQLiteConnectionString connString = new SQLiteConnectionString(dbPath, false);
+        static SQLiteConnectionWithLock conn = new SQLiteConnectionWithLock(new SQLitePlatformAndroid(), connString);
+        static SQLiteAsyncConnection db = new SQLiteAsyncConnection(() => conn);
+
+        MovieProvider provider = new MovieProvider(db);
 
         public PosterFragment ()
         {
@@ -60,9 +64,9 @@ namespace MovieApp.Fragments
         {
             try
             {
-                Uri uri = MovieContract.MoviesTable.ContentUri;
+                Uri uri = Movies.ContentUri;
 
-                var movies = await provider.QueryMovies(uri, null, null, null);
+                var movies = await provider.Query<Movies>(uri);
 
                 foreach (var movie in movies)
                 {
@@ -86,13 +90,16 @@ namespace MovieApp.Fragments
             gridView.Adapter = null;
             movieIds.Clear();
             paths.Clear();
-            var db = new SQLiteAsyncConnection(dbPath);
+            var connString = new SQLiteConnectionString(dbPath,false);
+            var conn = new SQLiteConnectionWithLock(new SQLitePlatformAndroid(), connString);
+            var db = new SQLiteAsyncConnection(()=>conn);
 
-            var tableExist = await MovieDbHelper.TableExists(db, "Movies");
+            var helper = new MovieDbHelper(db);
+            var tableExist = await helper.TableExists("Movies");
             var movieCount = 0;
             if (tableExist)
             {
-                movieCount = await db.Table<MovieContract.MoviesTable>().CountAsync();
+                movieCount = await db.Table<Movies>().CountAsync();
             }
             if (movieCount > 0)
             {
@@ -143,7 +150,7 @@ namespace MovieApp.Fragments
         private async Task GetMoveInfo (List<int> movieIds, List<string> paths)
         {
             var httpClient = new HttpClient();
-            List<MovieContract.MoviesTable> movieList = new List<MovieContract.MoviesTable>();
+            List<Movies> movieList = new List<Movies>();
             var count = 0;
             foreach (var movie in movieIds)
             {
@@ -169,7 +176,7 @@ namespace MovieApp.Fragments
 
                         trailerObjects.Add(trailer);
                     }
-                    var newMovie = new MovieContract.MoviesTable()
+                    var newMovie = new Movies()
                     {
                         MovieTitle = movieInfoJson.GetString("original_title"),
                         PosterPath = paths[count],
@@ -198,16 +205,16 @@ namespace MovieApp.Fragments
 
         }
 
-        private async Task CacheMovies (List<MovieContract.MoviesTable> movies)
+        private async Task CacheMovies (List<Movies> movies)
         {
-            var movieHelper = new MovieDbHelper(Application.Context);
+            var movieHelper = new MovieDbHelper(db);
 
-            await movieHelper.CreateTable(typeof(MovieContract.MoviesTable)).ContinueWith(async t =>
+            await movieHelper.CreateTable(typeof(Movies)).ContinueWith(async t =>
             {
-                Uri uri = MovieContract.MoviesTable.ContentUri;
+                Uri uri = Movies.ContentUri;
                 await provider.DeleteRecords(uri, null, null).ContinueWith(async t2 =>
                 {
-                    await provider.BulkInsert(uri, movies);
+                    await provider.Insert(uri, movies);
                 });
             });
 

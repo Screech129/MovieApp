@@ -3,6 +3,7 @@ using Android.Widget;
 using Android.OS;
 using Android.Views;
 using Android.Content;
+using Core;
 
 namespace MovieApp.Activities
 {
@@ -13,7 +14,7 @@ namespace MovieApp.Activities
         protected override void OnCreate(Bundle savedInstanceState)
         {
             base.OnCreate(savedInstanceState);
-
+            Core.Ioc.Container.Register<ILogger>(new AndroidLogger());
             // Set our view from the "main" layout resource
             SetContentView(Resource.Layout.Main);
 

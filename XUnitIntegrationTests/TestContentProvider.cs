@@ -1,26 +1,20 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 using Android.App;
 using Android.Content;
-using Android.OS;
-using Android.Runtime;
-using Android.Views;
-using Android.Widget;
-using MovieApp;
-using Uri = Android.Net.Uri;
-using Android.Database;
-using MovieApp.Data;
-using Android.Database.Sqlite;
 using SQLite;
 using System.IO;
 using System.Threading.Tasks;
 using Android.Util;
 using System.Threading;
 using Xunit;
-using Xunit.Sdk;
+using Model;
+using Core;
+using SQLite.Net;
+using SQLite.Net.Async;
+using SQLite.Net.Platform.XamarinAndroid;
+using System.Linq;
 
 namespace XunitIntegrationTest
 {
@@ -29,58 +23,97 @@ namespace XunitIntegrationTest
     {
         public const string LogTag = "TestDb";
         Context context = Application.Context;
-        string dbPath = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.Personal), "movie.db3");
+        static string dbPath = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.Personal), "movie.db3");
+
+        static SQLiteConnectionString connString = new SQLiteConnectionString(dbPath, false);
+        static SQLiteConnectionWithLock conn = new SQLiteConnectionWithLock(new SQLitePlatformAndroid(), connString);
+        static SQLiteAsyncConnection db = new SQLiteAsyncConnection(() => conn);
 
         public TestContentProvider ()
         {
-            var dbHelper = new MovieDbHelper(context);
-            dbHelper.DeleteDatabase();
+
 
         }
 
-        private List<MovieContract.MoviesTable> MockMovies ()
+        public async Task ArrangeEmptyDatabase ()
         {
-            var movieEntries = new List<MovieContract.MoviesTable>();
-            var movie1 = new MovieContract.MoviesTable()
+            var provider = new MovieProvider(db);
+            var helper = new MovieDbHelper(db);
+            var movieTableExist = await helper.TableExists("Movies");
+            var favoriteTableExist = await helper.TableExists("Favorites");
+            if (movieTableExist)
+            {
+                provider.DropTables<Movies>();
+            }
+            if (favoriteTableExist)
+            {
+                provider.DropTables<Favorites>();
+            }
+        }
+
+        public async Task ArrangeWithTables ()
+        {
+            await ArrangeEmptyDatabase();
+            await CreateDatabase("Movies");
+            await CreateDatabase("Favorites");
+        }
+
+        public async Task ArrangWithRecords ()
+        {
+            await ArrangeWithTables();
+            var provider = new MovieProvider(db);
+            Uri uri = Movies.ContentUri;
+            await provider.Insert(uri, MockMovies());
+
+            uri = Favorites.ContentUri;
+            await provider.Insert(uri, MockFavorites());
+
+        }
+
+
+        private List<Movies> MockMovies ()
+        {
+            var movieEntries = new List<Movies>();
+            var movie1 = new Movies()
             {
                 MovieId = 1,
                 MovieTitle = "Beauty and the Beast",
                 Plot = "Girl and large dog fall in love",
                 PosterPath = "http://www.google.com",
-                ReleaseDate = 1419033600,
+                ReleaseDate = DateTime.Now,
                 Reviews = "It's sooo splendubious",
                 Trailers = "http://www.yahoo.com",
                 VoteAverage = 8.5M
             };
-            var movie2 = new MovieContract.MoviesTable()
+            var movie2 = new Movies()
             {
                 MovieId = 2,
                 MovieTitle = "Happy Feet",
                 Plot = "blahhhh",
                 PosterPath = "http://www.google.com",
-                ReleaseDate = 1419033600,
+                ReleaseDate = DateTime.Now.AddDays(-34),
                 Reviews = "It's sooo splendubious",
                 Trailers = "http://www.yahoo.com",
                 VoteAverage = 8.5M
             };
-            var movie3 = new MovieContract.MoviesTable()
+            var movie3 = new Movies()
             {
                 MovieId = 3,
                 MovieTitle = "Beauty Beast",
                 Plot = "fall in love",
                 PosterPath = "http://www.google.com",
-                ReleaseDate = 1419033600,
+                ReleaseDate = DateTime.Now.AddDays(4),
                 Reviews = "'s sooo splendubious",
                 Trailers = "http://www.yahoo.com",
                 VoteAverage = 8.5M
             };
-            var movie4 = new MovieContract.MoviesTable()
+            var movie4 = new Movies()
             {
                 MovieId = 4,
                 MovieTitle = "Beauty",
                 Plot = "Girl and large dog fall in love",
                 PosterPath = "http://www.google.com",
-                ReleaseDate = 1419033600,
+                ReleaseDate = DateTime.Now.AddDays(-343),
                 Reviews = "It's sooo ",
                 Trailers = "http://www.yahoo.com",
                 VoteAverage = 8.5M
@@ -92,16 +125,16 @@ namespace XunitIntegrationTest
             return movieEntries;
         }
 
-        private List<MovieContract.FavoritesTable> MockFavorites ()
+        private List<Favorites> MockFavorites ()
         {
-            var favEntries = new List<MovieContract.FavoritesTable>();
-            var movie1 = new MovieContract.FavoritesTable()
+            var favEntries = new List<Favorites>();
+            var movie1 = new Favorites()
             {
                 MovieId = 1,
                 MovieTitle = "Aladdin",
                 Plot = "Homeless man cons princess",
                 PosterPath = "http://www.google.com",
-                ReleaseDate = 1419033600,
+                ReleaseDate = DateTime.Now.AddDays(-344),
                 Reviews = "It's sooo splendubious",
                 Trailers = "http://www.yahoo.com",
                 VoteAverage = 10.5M
@@ -113,17 +146,17 @@ namespace XunitIntegrationTest
         public async Task<CreateTablesResult> CreateDatabase (string dbName)
         {
             var cts = new CancellationTokenSource();
-            var db = new SQLiteAsyncConnection(dbPath);
+
             Log.Debug("IfStatement", "This was hit before If");
             try
             {
                 if (dbName == "Movies")
                 {
-                    return await db.CreateTableAsync<MovieContract.MoviesTable>();
+                    return await db.CreateTableAsync<Movies>();
                 }
                 else
                 {
-                    return await db.CreateTableAsync<MovieContract.FavoritesTable>();
+                    return await db.CreateTableAsync<Favorites>();
 
                 }
             }
@@ -139,19 +172,15 @@ namespace XunitIntegrationTest
         [Fact]
         public async Task Insert_MockMovie_ReturnAValidId ()
         {
-            var id = 0;
-
-            var cts = new CancellationTokenSource();
+            await ArrangeEmptyDatabase();
             try
             {
-                await CreateDatabase("Movies").ContinueWith(async t =>
+                await CreateDatabase("Movies").ContinueWith(async (Task<CreateTablesResult> t) =>
                 {
-                    var provider = new MovieProvider();
-                    Uri uri = MovieContract.MoviesTable.ContentUri;
-                    var returnUriRaw = await provider.Insert(uri, MockMovies());
-                    var returnUri = returnUriRaw;
-                    id = int.Parse(returnUri.PathSegments[3]);
-                    Assert.True(id > 0);
+                    var provider = new MovieProvider(db);
+                    Uri uri = Movies.ContentUri;
+                    var ids = await provider.Insert(uri, MockMovies());
+                    Assert.True(ids.Count > 0);
                 });
             }
             catch (Exception ex)
@@ -165,33 +194,27 @@ namespace XunitIntegrationTest
         [Fact]
         public async Task Query_MovieDataBase_ReturnsAtLeastOneRecord ()
         {
-            await Insert_MockMovie_ReturnAValidId().ContinueWith(async t =>
-            {
-                var provider = new MovieProvider();
-                Uri uri = MovieContract.MoviesTable.ContentUri;
+            await ArrangWithRecords();
 
-                var results = await provider.QueryMovies(uri, null, null, "movie_id");
-                Assert.True(results.Count > 0);
-            });
+            var provider = new MovieProvider(db);
+            Uri uri = Movies.ContentUri;
 
+            var results = await provider.Query<Movies>(uri);
+            Assert.True(results.Count > 0);
         }
 
         [Fact]
         public async Task Insert_MockFavorites_ReturnAValidId ()
         {
-            var id = 0;
-
-            var cts = new CancellationTokenSource();
+            await ArrangeEmptyDatabase();
             try
             {
                 await CreateDatabase("Favorites").ContinueWith(async t =>
                 {
-                    var provider = new MovieProvider();
-                    Uri uri = MovieContract.FavoritesTable.ContentUri;
-                    var returnUriRaw = await provider.Insert(uri, MockFavorites());
-                    var returnUri = returnUriRaw;
-                    id = int.Parse(returnUri.PathSegments[3]);
-                    Assert.True(id > 0);
+                    var provider = new MovieProvider(db);
+                    Uri uri = Favorites.ContentUri;
+                    var ids = await provider.Insert(uri, MockFavorites());
+                    Assert.True(ids.Count > 0);
                 });
 
             }
@@ -206,29 +229,52 @@ namespace XunitIntegrationTest
         [Fact]
         public async Task BulkInsert_MockMovies_ReturnCountGreaterThan0 ()
         {
-            var returnNum = 0;
+            await ArrangeEmptyDatabase();
             await CreateDatabase("Movies").ContinueWith(async t =>
              {
-                 var provider = new MovieProvider();
-                 Uri uri = MovieContract.MoviesTable.ContentUri;
-                 returnNum = await provider.BulkInsert(uri, MockMovies());
-                 Assert.True(returnNum > 0);
+                 var provider = new MovieProvider(db);
+                 var uri = Movies.ContentUri;
+                 var returnNum = await provider.Insert(uri, MockMovies());
+                 Assert.True(returnNum.Count == MockMovies().Count);
              });
         }
 
         [Fact]
         public async Task Query_FavoriteDataBase_ReturnsAtLeastOneRecord ()
         {
-            await Insert_MockMovie_ReturnAValidId().ContinueWith(async t =>
-            {
-                var provider = new MovieProvider();
-                Uri uri = MovieContract.FavoritesTable.ContentUri;
+            await ArrangWithRecords();
 
-                var results = await provider.QueryFavorites(uri, null, null, "movie_id");
+            var provider = new MovieProvider(db);
+            var uri = Favorites.ContentUri;
 
-                Assert.True(results.Count > 0);
-            });
+            var results = await provider.Query<Favorites>(uri);
 
+            Assert.True(results.Count > 0);
+        }
+
+        [Fact]
+        public async Task Query_MovieDataBaseSpecificId_ReturnsOneRecord ()
+        {
+            await ArrangWithRecords();
+
+            var provider = new MovieProvider(db);
+            var uri = Movies.BuildUri(2);
+
+            var results = await provider.Query<Movies>(uri);
+            Assert.True(results.Any(m => m.MovieId == 2));
+
+        }
+
+        [Fact]
+        public void FailsOnPurpose ()
+        {
+            throw new Exception("Should not pass");
+        }
+
+        [Fact]
+        public async Task FailsInTask ()
+        {
+            await Task.Run(() => { throw new Exception("AHHHHHHHHHHHHHHHHHHHHHHHH!!!!!"); }) ;
         }
     }
 }

@@ -9,6 +9,8 @@ using Android.OS;
 
 using Xunit.Sdk;
 using Xunit.Runners.UI;
+using Core;
+using MovieApp;
 
 namespace XUnitIntegrationTests
 {
@@ -23,7 +25,7 @@ namespace XUnitIntegrationTests
 
             AddExecutionAssembly(typeof(ExtensibilityPointFactory).Assembly);
             // or in any reference assemblies			
-
+            Core.Ioc.Container.Register<ILogger>(new AndroidLogger());
             //AddTestAssembly(typeof(PortableTests).Assembly);
             // or in any assembly that you load (since JIT is available)
 
