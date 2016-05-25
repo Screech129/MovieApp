@@ -4,8 +4,6 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Android.App;
-using Android.Content;
 using Android.Util;
 using Core;
 using Model;
@@ -59,7 +57,7 @@ namespace XUnitIntegrationTests
         {
             await ArrangeWithTables();
             var provider = new MovieProvider(db);
-            Uri uri = Movies.ContentUri;
+            var uri = Movies.ContentUri;
             await provider.Insert(uri, MockMovies());
 
             uri = Favorites.ContentUri;
@@ -143,17 +141,17 @@ namespace XUnitIntegrationTests
         public async Task<CreateTablesResult> CreateDatabase (string dbName)
         {
             var cts = new CancellationTokenSource();
-
+            cts.CancelAfter(500);
             Log.Debug("IfStatement", "This was hit before If");
             try
             {
                 if (dbName == "Movies")
                 {
-                    return await db.CreateTableAsync<Movies>();
+                    return await db.CreateTableAsync<Movies>(cts.Token);
                 }
                 else
                 {
-                    return await db.CreateTableAsync<Favorites>();
+                    return await db.CreateTableAsync<Favorites>(cts.Token);
 
                 }
             }
@@ -175,7 +173,7 @@ namespace XUnitIntegrationTests
                 await CreateDatabase("Movies").ContinueWith(async (Task<CreateTablesResult> t) =>
                 {
                     var provider = new MovieProvider(db);
-                    Uri uri = Movies.ContentUri;
+                    var uri = Movies.ContentUri;
                     var ids = await provider.Insert(uri, MockMovies());
                     Assert.True(ids.Count > 0);
                 });
@@ -194,7 +192,7 @@ namespace XUnitIntegrationTests
             await ArrangWithRecords();
 
             var provider = new MovieProvider(db);
-            Uri uri = Movies.ContentUri;
+            var uri = Movies.ContentUri;
 
             var results = await provider.Query<Movies>(uri);
             Assert.True(results.Count > 0);
@@ -209,7 +207,7 @@ namespace XUnitIntegrationTests
                 await CreateDatabase("Favorites").ContinueWith(async t =>
                 {
                     var provider = new MovieProvider(db);
-                    Uri uri = Favorites.ContentUri;
+                    var uri = Favorites.ContentUri;
                     var ids = await provider.Insert(uri, MockFavorites());
                     Assert.True(ids.Count > 0);
                 });

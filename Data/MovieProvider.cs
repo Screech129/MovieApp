@@ -1,21 +1,16 @@
-using Core;
-using Core.Ioc;
-using Model;
-using SQLite.Net;
-using SQLite.Net.Async;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Diagnostics;
-using System.IO;
 using System.Threading.Tasks;
+using Core.Ioc;
+using Model;
+using SQLite.Net.Async;
 
 namespace Core
 {
 
     public class MovieProvider
     {
-        private MovieDbHelper movieHelper;
         public const int MoviesUri = 100;
         public const int FavoritesUri = 101;
         public const int MovieFromId = 102;
@@ -23,25 +18,9 @@ namespace Core
         private readonly SQLiteAsyncConnection _db;
 
         public MovieProvider (SQLiteAsyncConnection conn)
-            : base()
         {
             _db = conn;
         }
-
-        private async Task<List<Favorites>> GetFavoriteMovies (Uri uri, string[] projection, string selection, string[] selectionArgs, string sortOrder)
-        {
-
-            var Movies = _db.Table<Favorites>();
-            var movies = await Movies.ToListAsync().ContinueWith(m => m);
-            return movies.Result;
-        }
-
-        private AsyncTableQuery<Movies> GetAllMovies (Uri uri, string[] projection, string selection, string[] selectionArgs, string sortOrder)
-        {
-            var Movies = _db.Table<Movies>();
-            return Movies;
-        }
-
 
         private static int MatchUri (Uri uri)
         {
@@ -52,31 +31,21 @@ namespace Core
                 {
                     return MovieFromId;
                 }
-                else if (parsedUri.Table == "favorites")
+                if (parsedUri.Table == "favorites")
                 {
                     return FavoriteFromId;
                 }
-                else
-                {
-                    return -1;
-                }
+                return -1;
             }
-            else
+            if (parsedUri.Table == "movies")
             {
-                if (parsedUri.Table == "movies")
-                {
-                    return MoviesUri;
-                }
-                else if (parsedUri.Table == "favorites")
-                {
-                    return FavoritesUri;
-                }
-                else
-                {
-                    return -1;
-                }
+                return MoviesUri;
             }
-
+            if (parsedUri.Table == "favorites")
+            {
+                return FavoritesUri;
+            }
+            return -1;
         }
         public async Task<int> DeleteRecords (Uri uri, string selection, string[] selectionArgs)
         {
@@ -111,9 +80,7 @@ namespace Core
 
         public async Task<List<int>> Insert<T> (Uri uri, List<T> values) where T : BaseColumns
         {
-            var table = _db.Table<T>();
-
-            List<int> ids = new List<int>();
+            var ids = new List<int>();
             try
             {
                 foreach (var value in values)
@@ -138,9 +105,7 @@ namespace Core
 
         public async Task<List<T>> Query<T> (Uri uri) where T : BaseColumns
         {
-            List<T> returnQuery = null;
             var parsedUri = uri.Parse();
-            var match = MatchUri(uri);
             switch (parsedUri.Table)
             {
                 case "movies":
@@ -150,9 +115,8 @@ namespace Core
                     var favorites = await ExecuteQuery<Favorites>(parsedUri);
                     return favorites.Cast<T>().ToList();
                 default:
-                    break;
+                    return null;
             }
-            return returnQuery;
         }
 
         private async Task<List<T>> ExecuteQuery<T> (ParsedUri parsedUri) where T : BaseColumns
@@ -165,11 +129,8 @@ namespace Core
                 {
                     return await table.ToListAsync();
                 }
-                else
-                {
-                    var movieId = parsedUri.Id.Value;
-                    return table.Where(m => m.MovieId == movieId).ToListAsync().Result;
-                }
+                var movieId = parsedUri.Id.Value;
+                return table.Where(m => m.MovieId == movieId).ToListAsync().Result;
             }
             catch (Exception ex)
             {

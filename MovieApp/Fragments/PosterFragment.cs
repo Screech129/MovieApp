@@ -82,16 +82,16 @@ namespace MovieApp.Fragments
             }
         }
 
-        public async override void OnStart ()
+        public override async void OnStart ()
         {
             base.OnStart();
             var gridView = this.View.FindViewById<GridView>(Resource.Id.poster_grid);
             gridView.Adapter = null;
             movieIds.Clear();
             paths.Clear();
-            var connString = new SQLiteConnectionString(dbPath,false);
+            var connString = new SQLiteConnectionString(dbPath, false);
             var conn = new SQLiteConnectionWithLock(new SQLitePlatformAndroid(), connString);
-            var db = new SQLiteAsyncConnection(()=>conn);
+            var db = new SQLiteAsyncConnection(() => conn);
 
             var helper = new MovieDbHelper(db);
             var tableExist = await helper.TableExists("Movies");
@@ -119,8 +119,8 @@ namespace MovieApp.Fragments
                 var httpClient = new HttpClient();
                 var prefs = PreferenceManager.GetDefaultSharedPreferences(Activity);
                 var sortBy = prefs.GetString(Resources.GetString(Resource.String.pref_sort_key), Resources.GetString(Resource.String.pref_sort_default));
-                var getPopularMoviesJSON = httpClient.GetStringAsync("http://api.themoviedb.org/3/discover/movie?sort_by=" + sortBy + "&api_key=51be394ff82a4dec506f5cf2ce21f6d4");
-                var movieResult = await getPopularMoviesJSON;
+                var getPopularMoviesJson = httpClient.GetStringAsync("http://api.themoviedb.org/3/discover/movie?sort_by=" + sortBy + "&api_key=51be394ff82a4dec506f5cf2ce21f6d4");
+                var movieResult = await getPopularMoviesJson;
                 await GetMoviePosterPaths(movieResult, view);
 
             }
@@ -153,21 +153,31 @@ namespace MovieApp.Fragments
             var count = 0;
             foreach (var movie in movieIds)
             {
-                var getJSON = httpClient.GetStringAsync("http://api.themoviedb.org/3/movie/" + movie + "?api_key=51be394ff82a4dec506f5cf2ce21f6d4&append_to_response=reviews,trailers");
+                var getJson = httpClient.GetStringAsync("http://api.themoviedb.org/3/movie/" + movie + "?api_key=51be394ff82a4dec506f5cf2ce21f6d4&append_to_response=reviews,trailers");
                 var movieInfoStringBuilder = new StringBuilder();
-                movieInfoStringBuilder.Append(getJSON.Result);
-                var JSONString = movieInfoStringBuilder.ToString();
+                movieInfoStringBuilder.Append(getJson.Result);
+                var jsonString = movieInfoStringBuilder.ToString();
+                var reviewContent = "";
                 var trailerObjects = new List<object>();
                 try
                 {
-                    var movieInfoJson = new JSONObject(JSONString);
+                    var movieInfoJson = new JSONObject(jsonString);
                     var trailerInfo = new JSONObject(movieInfoJson.GetString("trailers"));
                     var youTubeInfo = new JSONArray(trailerInfo.GetString("youtube"));
- 
-                    for (var i=0;i<youTubeInfo.Length();i++)
+                    var reviewInfo = new JSONObject(movieInfoJson.GetString("reviews"));
+                    var reviewArray = new JSONArray(reviewInfo.GetString("results"));
+
+                    if (reviewArray.Length() > 0)
+                    {
+                        var reviewString = new JSONObject(reviewArray.GetString(0));
+                        reviewContent = reviewString.GetString("content");
+                    }
+
+                    for (var i = 0; i < youTubeInfo.Length(); i++)
                     {
                         var jsonInfo = new JSONObject(youTubeInfo.GetString(i));
-                        var trailer = new {
+                        var trailer = new
+                        {
                             MovieId = movieInfoJson.GetInt("id"),
                             Name = jsonInfo.GetString("name"),
                             Path = jsonInfo.GetString("source")
@@ -183,15 +193,15 @@ namespace MovieApp.Fragments
                         VoteAverage = movieInfoJson.GetInt("vote_average"),
                         ReleaseDate = DateTime.Parse(movieInfoJson.GetString("release_date")),
                         MovieId = movieInfoJson.GetInt("id"),
-                        Reviews = movieInfoJson.GetString("reviews"),
+                        Reviews = reviewContent,
                     };
                     foreach (var trailer in trailerObjects)
                     {
                         var t = trailer.GetType();
-                        newMovie.Trailers += t.GetProperty("Name").GetValue(trailer)+ ": www.youtube.com/" + t.GetProperty("Path").GetValue(trailer) +",";
+                        newMovie.Trailers += t.GetProperty("Name").GetValue(trailer) + ": www.youtube.com/" + t.GetProperty("Path").GetValue(trailer) + ",";
                     }
-                    
-                    
+
+
                     movieList.Add(newMovie);
                     count++;
                 }

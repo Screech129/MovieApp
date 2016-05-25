@@ -84,14 +84,14 @@ namespace MovieApp
 		public partial class Id
 		{
 			
-			// aapt resource value: 0x7f0a0012
-			public const int action_settings = 2131361810;
+			// aapt resource value: 0x7f0a0015
+			public const int action_settings = 2131361813;
 			
 			// aapt resource value: 0x7f0a0000
 			public const int container = 2131361792;
 			
-			// aapt resource value: 0x7f0a0011
-			public const int fragment_poster = 2131361809;
+			// aapt resource value: 0x7f0a0014
+			public const int fragment_poster = 2131361812;
 			
 			// aapt resource value: 0x7f0a0005
 			public const int moviePoster = 2131361797;
@@ -105,8 +105,8 @@ namespace MovieApp
 			// aapt resource value: 0x7f0a0008
 			public const int plot_text = 2131361800;
 			
-			// aapt resource value: 0x7f0a0010
-			public const int poster_grid = 2131361808;
+			// aapt resource value: 0x7f0a0013
+			public const int poster_grid = 2131361811;
 			
 			// aapt resource value: 0x7f0a0004
 			public const int poster_layout = 2131361796;
@@ -128,6 +128,15 @@ namespace MovieApp
 			
 			// aapt resource value: 0x7f0a000e
 			public const int releaseDate_text = 2131361806;
+			
+			// aapt resource value: 0x7f0a0011
+			public const int review_label = 2131361809;
+			
+			// aapt resource value: 0x7f0a0010
+			public const int review_layout = 2131361808;
+			
+			// aapt resource value: 0x7f0a0012
+			public const int review_text = 2131361810;
 			
 			// aapt resource value: 0x7f0a0002
 			public const int title_label = 2131361794;
@@ -217,14 +226,14 @@ namespace MovieApp
 			// aapt resource value: 0x7f050000
 			public const int Hello = 2131034112;
 			
-			// aapt resource value: 0x7f05000d
-			public const int action_settings = 2131034125;
+			// aapt resource value: 0x7f05000f
+			public const int action_settings = 2131034127;
 			
 			// aapt resource value: 0x7f050003
 			public const int app_name = 2131034115;
 			
-			// aapt resource value: 0x7f050013
-			public const int content_authority = 2131034131;
+			// aapt resource value: 0x7f050015
+			public const int content_authority = 2131034133;
 			
 			// aapt resource value: 0x7f050002
 			public const int hello = 2131034114;
@@ -235,20 +244,20 @@ namespace MovieApp
 			// aapt resource value: 0x7f050007
 			public const int plot_text = 2131034119;
 			
-			// aapt resource value: 0x7f05000f
-			public const int pref_sortDialog_label = 2131034127;
+			// aapt resource value: 0x7f050011
+			public const int pref_sortDialog_label = 2131034129;
+			
+			// aapt resource value: 0x7f050014
+			public const int pref_sort_default = 2131034132;
 			
 			// aapt resource value: 0x7f050012
-			public const int pref_sort_default = 2131034130;
+			public const int pref_sort_key = 2131034130;
 			
 			// aapt resource value: 0x7f050010
-			public const int pref_sort_key = 2131034128;
+			public const int pref_sort_label = 2131034128;
 			
-			// aapt resource value: 0x7f05000e
-			public const int pref_sort_label = 2131034126;
-			
-			// aapt resource value: 0x7f050011
-			public const int pref_sort_summary = 2131034129;
+			// aapt resource value: 0x7f050013
+			public const int pref_sort_summary = 2131034131;
 			
 			// aapt resource value: 0x7f050008
 			public const int rating_label = 2131034120;
@@ -261,6 +270,12 @@ namespace MovieApp
 			
 			// aapt resource value: 0x7f05000b
 			public const int releaseDate_text = 2131034123;
+			
+			// aapt resource value: 0x7f05000d
+			public const int review_label = 2131034125;
+			
+			// aapt resource value: 0x7f05000e
+			public const int review_text = 2131034126;
 			
 			// aapt resource value: 0x7f050004
 			public const int title_label = 2131034116;

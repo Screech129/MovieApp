@@ -43,23 +43,24 @@ namespace MovieApp.Fragments
 
         private void BindFields (View rootView, Movies movieInfo)
         {
-            var titleTV = rootView.FindViewById<TextView>(Resource.Id.title_text);
-            titleTV.Text = movieInfo.MovieTitle;
-            var posterIV = rootView.FindViewById<ImageView>(Resource.Id.moviePoster);
-            Picasso.With(this.Activity).Load("http://image.tmdb.org/t/p/w185/" + movieInfo.PosterPath).Into(posterIV);
-            var plotTV = rootView.FindViewById<TextView>(Resource.Id.plot_text);
-            plotTV.Text = movieInfo.Plot;
-            var userRatingTV = rootView.FindViewById<TextView>(Resource.Id.rating_text);
-            userRatingTV.Text = movieInfo.VoteAverage.ToString();
-            var releaseDateTV = rootView.FindViewById<TextView>(Resource.Id.releaseDate_text);
-            releaseDateTV.Text = movieInfo.ReleaseDate.ToString("MM/dd/yyyy");
-
+            var titleTv = rootView.FindViewById<TextView>(Resource.Id.title_text);
+            titleTv.Text = movieInfo.MovieTitle;
+            var posterIv = rootView.FindViewById<ImageView>(Resource.Id.moviePoster);
+            Picasso.With(this.Activity).Load("http://image.tmdb.org/t/p/w185/" + movieInfo.PosterPath).Into(posterIv);
+            var plotTv = rootView.FindViewById<TextView>(Resource.Id.plot_text);
+            plotTv.Text = movieInfo.Plot;
+            var userRatingTv = rootView.FindViewById<TextView>(Resource.Id.rating_text);
+            userRatingTv.Text = movieInfo.VoteAverage.ToString();
+            var releaseDateTv = rootView.FindViewById<TextView>(Resource.Id.releaseDate_text);
+            releaseDateTv.Text = movieInfo.ReleaseDate.ToString("MM/dd/yyyy");
+            var reviewTv = rootView.FindViewById<TextView>(Resource.Id.review_text);
+            reviewTv.Text = movieInfo.Reviews;
             BindTrailers(rootView, movieInfo);
         }
 
         private void BindTrailers (View rootView, Movies movieInfo)
         {
-            var movieTrailerLL = rootView.FindViewById<LinearLayout>(Resource.Id.trailer_layout);
+            var movieTrailerLl = rootView.FindViewById<LinearLayout>(Resource.Id.trailer_layout);
             if (!string.IsNullOrEmpty(movieInfo.Trailers))
             {
                 var trailerList = movieInfo.Trailers.Split(',').ToList();
@@ -74,7 +75,7 @@ namespace MovieApp.Fragments
                 var trailerAdapter = new ArrayAdapter(Activity, Android.Resource.Layout.SimpleExpandableListItem1, Android.Resource.Id.Text1, trailerNameList);
                 for (var i = 0; i < trailerAdapter.Count; i++)
                 {
-                    var view = trailerAdapter.GetView(i, null, movieTrailerLL);
+                    var view = trailerAdapter.GetView(i, null, movieTrailerLl);
                     view.SetPadding(0, 10, 0, 5);
                     
                     view.Tag = trailerList[i].Split(':')[1];
@@ -89,8 +90,8 @@ namespace MovieApp.Fragments
                     dividerView.SetMinimumHeight(1);
                     dividerView.SetBackgroundColor(Android.Graphics.Color.DarkGray);
 
-                    movieTrailerLL.AddView(view);
-                    movieTrailerLL.AddView(dividerView);
+                    movieTrailerLl.AddView(view);
+                    movieTrailerLl.AddView(dividerView);
                 }
             }
         }

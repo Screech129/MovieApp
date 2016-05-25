@@ -11,7 +11,8 @@
 	<string name="releaseDate_label">Release Date: </string>
 	<string name="releaseDate_text">01/01/2016</string>
   <string name="trailer_label">Trailers: </string>
-
+  <string name="review_label">Reviews: </string>
+  <string name="review_text">N/A</string>
   <string name="action_settings">Settings</string>
 	<string name="pref_sort_label">Sort By</string>
 	<string name="pref_sortDialog_label">Sort By</string>
