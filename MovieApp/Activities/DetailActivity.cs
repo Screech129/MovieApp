@@ -1,6 +1,7 @@
 ﻿using Android.App;
 using Android.OS;
 using Android.Views;
+using Android.Widget;
 using MovieApp.Fragments;
 namespace MovieApp.Activities
 {
@@ -18,7 +19,7 @@ namespace MovieApp.Activities
             {
                 var fragTx = this.FragmentManager.BeginTransaction();
 
-                fragTx.Add(Resource.Id.container, new DetailFragment())
+                fragTx.Add(Resource.Id.movie_detail_container, new DetailFragment())
                     .Commit();
             }
         }
@@ -33,6 +34,8 @@ namespace MovieApp.Activities
 
             return base.OnOptionsItemSelected(item);
         }
+
+        
     }
 }
 

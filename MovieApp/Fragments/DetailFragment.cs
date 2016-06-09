@@ -20,8 +20,15 @@ using System.IO;
 
 namespace MovieApp.Fragments
 {
+
     public class DetailFragment : Fragment
     {
+        public const string DETAIL_URI = "URI";
+        private Uri globalUri;
+        private static string dbPath = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.Personal), "movie.db3");
+        private static SQLiteConnectionString connString = new SQLiteConnectionString(dbPath, false);
+        private static SQLiteConnectionWithLock conn = new SQLiteConnectionWithLock(new SQLitePlatformAndroid(), connString);
+        SQLiteAsyncConnection db = new SQLiteAsyncConnection(() => conn);
         public DetailFragment ()
         {
             SetHasOptionsMenu(true);
@@ -29,15 +36,15 @@ namespace MovieApp.Fragments
 
         public override View OnCreateView (LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
         {
+            var arguments = Arguments;
             var intent = Activity.Intent;
             var rootView = inflater.Inflate(Resource.Layout.fragment_detail, container, false);
-            if (intent != null && intent.HasExtra(Intent.ExtraText))
-            {
-                var movieId = intent.GetLongExtra(Intent.ExtraText, 0);
-                var movieInfo = GetMoveInfo(movieId).Result.FirstOrDefault();
+            if (arguments == null && intent.Data == null) return rootView;
+            globalUri = arguments == null ? intent.Data : (Uri)arguments.GetParcelable(DETAIL_URI);
 
-                BindFields(rootView, movieInfo);
-            }
+            var movieId = globalUri.PathSegments.Last();
+            var movieInfo = GetMoveInfo(long.Parse(movieId)).Result.FirstOrDefault();
+            BindFields(rootView, movieInfo);
             return rootView;
         }
 
@@ -55,6 +62,49 @@ namespace MovieApp.Fragments
             releaseDateTv.Text = movieInfo.ReleaseDate.ToString("MM/dd/yyyy");
             var reviewTv = rootView.FindViewById<TextView>(Resource.Id.review_text);
             reviewTv.Text = movieInfo.Reviews;
+
+            var starBtn = rootView.FindViewById<CheckBox>(Resource.Id.favorite);
+            starBtn.Checked = movieInfo.IsFavorite;
+
+            starBtn.Click += async (sender, e) =>
+            {
+                
+                var movieId = long.Parse(globalUri.PathSegments.Last());
+                var provider = new MovieProvider(db);
+                var movieUri = Movies.BuildUri(movieId);
+                var faveUri = Favorites.BuildUri(movieId);
+                var currentMovieList = await GetMoveInfo(movieId);
+                var currentMovie = currentMovieList.FirstOrDefault();
+                if (currentMovie != null) currentMovie.IsFavorite = starBtn.Checked;
+                provider.Update(movieUri, currentMovieList, null, null);
+                if (starBtn.Checked)
+                {
+                    var favoriteList = new List<Favorites>();
+                    var favorite = new Favorites()
+                    {
+                        MovieId = currentMovie.MovieId,
+                        MovieTitle = currentMovie.MovieTitle,
+                        Plot = currentMovie.Plot,
+                        PosterPath = currentMovie.PosterPath,
+                        ReleaseDate = currentMovie.ReleaseDate,
+                        Reviews = currentMovie.Reviews,
+                        Trailers = currentMovie.Trailers,
+                        VoteAverage = currentMovie.VoteAverage
+                    };
+                    var dbHelper = new MovieDbHelper(db);
+                    if (!await dbHelper.TableExists("Favorites"))
+                    {
+                        await db.CreateTableAsync<Favorites>();
+                    }
+                    favoriteList.Add(favorite);
+                    await provider.Insert(faveUri, favoriteList);
+                }
+                else
+                {
+                    await provider.DeleteRecords(faveUri, faveUri.Parse().Id.ToString(), null);
+                }
+            };
+
             BindTrailers(rootView, movieInfo);
         }
 
@@ -77,7 +127,7 @@ namespace MovieApp.Fragments
                 {
                     var view = trailerAdapter.GetView(i, null, movieTrailerLl);
                     view.SetPadding(0, 10, 0, 5);
-                    
+
                     view.Tag = trailerList[i].Split(':')[1];
                     view.Clickable = true;
                     view.Click += (sender, eventArgs) =>
@@ -98,11 +148,6 @@ namespace MovieApp.Fragments
 
         private async Task<List<Movies>> GetMoveInfo (long movieId)
         {
-            var dbPath = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.Personal), "movie.db3");
-            var connString = new SQLiteConnectionString(dbPath, false);
-            var conn = new SQLiteConnectionWithLock(new SQLitePlatformAndroid(), connString);
-            var db = new SQLiteAsyncConnection(() => conn);
-
             var provider = new MovieProvider(db);
             var uri = Movies.BuildUri(movieId);
             var movieList = await provider.Query<Movies>(uri);

@@ -24,7 +24,7 @@ namespace MovieApp.Activities
             SetContentView(Resource.Layout.activity_detail);
             var fragTx = this.FragmentManager.BeginTransaction();
 
-            fragTx.Replace(Resource.Id.container, new SettingsFragment()).Commit();
+            fragTx.Replace(Resource.Id.movie_detail_container, new SettingsFragment()).Commit();
         }
     }
 }

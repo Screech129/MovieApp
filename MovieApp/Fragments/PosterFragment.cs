@@ -39,6 +39,11 @@ namespace MovieApp.Fragments
 
         }
 
+        public interface ICallback
+        {
+            void OnItemSelected(Android.Net.Uri movieUri);
+        }
+
         public override void OnCreate (Bundle savedInstanceState)
         {
             base.OnCreate(savedInstanceState);
@@ -52,9 +57,11 @@ namespace MovieApp.Fragments
             gridView.ItemClick += (sender, e) =>
             {
                 var movieId = e.Id;
-                var detailsIntent = new Intent(this.Activity, typeof(DetailActivity));
-                detailsIntent.PutExtra(Intent.ExtraText, movieId);
-                StartActivity(detailsIntent);
+                if (movieId != 0)
+                {
+                    var movieUri = Android.Net.Uri.Parse(Movies.BuildUri(movieId).OriginalString);
+                    ((ICallback)Activity).OnItemSelected(movieUri);
+                }
             };
             return view;
         }

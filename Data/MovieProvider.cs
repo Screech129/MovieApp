@@ -57,10 +57,16 @@ namespace Core
             switch (match)
             {
                 case FavoritesUri:
-                    deletedRows = await _db.DeleteAsync(selection);
+                    deletedRows = await _db.ExecuteAsync("DELETE FROM Favorites");
+                    break;
+                case FavoriteFromId:
+                    deletedRows = await _db.ExecuteAsync("DELETE FROM Favorites WHERE MovieId = '" + selection + "'");
                     break;
                 case MoviesUri:
-                    deletedRows = await _db.ExecuteAsync("DELETE FROM 'Movies'");
+                    deletedRows = await _db.ExecuteAsync("DELETE FROM Movies");
+                    break;
+                case MovieFromId:
+                    deletedRows = await _db.ExecuteAsync("DELETE FROM Movies WHERE MovieId = '" + selection + "'");
                     break;
                 default:
                     throw new Exception("Unkown uri: " + uri);
@@ -149,10 +155,38 @@ namespace Core
             switch (match)
             {
                 case FavoritesUri:
-                    updatedRows = _db.UpdateAsync(values).Result;
+                case FavoriteFromId:
+                    try
+                    {
+                        foreach (var favorite in values)
+                        {
+                            updatedRows = _db.UpdateAsync(favorite).Result;
+                        }
+
+                    }
+                    catch (Exception ex)
+                    {
+
+                        var logger = Container.Resolve<ILogger>();
+                        logger.Log("UpdateStatement", ex);
+                        throw;
+                    }
                     break;
                 case MoviesUri:
-                    updatedRows = _db.UpdateAsync(values).Result;
+                case MovieFromId:
+                    try
+                    {
+                        foreach (var movie in values)
+                        {
+                            updatedRows = _db.UpdateAsync(movie).Result;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        var logger = Container.Resolve<ILogger>();
+                        logger.Log("UpdateStatement", ex);
+                        throw;
+                    }
                     break;
                 default:
                     throw new Exception("Unknown uri: " + uri);

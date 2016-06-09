@@ -93,6 +93,9 @@
     <None Include="Properties\AndroidManifest.xml" />
     <None Include="Assets\AboutAssets.txt" />
     <None Include="packages.config" />
+    <AndroidResource Include="Resources\layout-sw600dp\Main.axml">
+      <SubType>Designer</SubType>
+    </AndroidResource>
   </ItemGroup>
   <ItemGroup>
     <AndroidResource Include="Resources\layout\Main.axml" />
@@ -108,10 +111,12 @@
     <AndroidResource Include="Resources\menu\main.axml" />
     <AndroidResource Include="Resources\xml\pref_general.xml" />
     <AndroidResource Include="Resources\layout\activity_detail.axml" />
-    <AndroidResource Include="Resources\layout\fragment_detail.axml" />
+    <AndroidResource Include="Resources\layout\fragment_detail.axml">
+      <SubType>Designer</SubType>
+    </AndroidResource>
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Resources\drawable\" />
+    <AndroidResource Include="Resources\drawable\star.xml" />
   </ItemGroup>
   <ItemGroup>
     <XamarinComponentReference Include="sqlite-net">
@@ -134,6 +139,12 @@
       <Project>{6A8162A8-4E8D-4116-A238-8E913DAA9A98}</Project>
       <Name>Model</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <AndroidResource Include="Resources\drawable\btn_star_big_off.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <AndroidResource Include="Resources\drawable\btn_star_big_on.png" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\Android\Xamarin.Android.CSharp.targets" />
 </Project>

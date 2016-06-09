@@ -1,6 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
-<fragment xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/fragment_poster"
-    android:name="MovieApp.Fragments.PosterFragment"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent" />
+    android:layout_height="match_parent"
+    android:divider="?android:attr/dividerHorizontal"
+    android:orientation="horizontal"
+    tools:context="MovieApp.Activities.MainActivity">
+    <fragment
+        android:id="@+id/fragment_main"
+        android:name="MovieApp.Fragments.PosterFragment"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="2"
+        tools:layout="@android:layout/list_content" />
+</LinearLayout>

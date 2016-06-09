@@ -10,6 +10,10 @@ namespace Model
     [Table("Movies")]
     public class Movies : BaseColumns
     {
+
+        [NotNull]
+        public bool IsFavorite { get; set; }
+
         public static Uri ContentUri = new Uri(BaseContentUri, "movies");
         public const string PathMovies = "movies";
 

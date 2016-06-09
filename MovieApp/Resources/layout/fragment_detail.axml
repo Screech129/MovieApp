@@ -14,6 +14,11 @@
             android:layout_height="wrap_content"
             android:id="@+id/title_layout"
             android:orientation="horizontal">
+          <CheckBox
+                android:id="@+id/favorite"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:button="@drawable/star" />
             <TextView
                 android:text="@string/title_label"
                 android:textAppearance="?android:attr/textAppearanceMedium"
@@ -22,6 +27,7 @@
                 android:layout_height="wrap_content"
                 android:paddingRight="10px"
                 android:id="@+id/title_label" />
+            
             <TextView
                 android:text="@string/title_text"
                 android:textAppearance="?android:attr/textAppearanceMedium"
