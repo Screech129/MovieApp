@@ -15,6 +15,7 @@ using Org.Json;
 using Android.Preferences;
 using MovieApp.Activities;
 using System.IO;
+using System.Linq;
 using Core;
 using Model;
 using SQLite.Net.Async;
@@ -99,6 +100,8 @@ namespace MovieApp.Fragments
             var connString = new SQLiteConnectionString(dbPath, false);
             var conn = new SQLiteConnectionWithLock(new SQLitePlatformAndroid(), connString);
             var db = new SQLiteAsyncConnection(() => conn);
+            var prefs = PreferenceManager.GetDefaultSharedPreferences(Activity);
+            var sortBy = prefs.GetString(Resources.GetString(Resource.String.pref_sort_key), Resources.GetString(Resource.String.pref_sort_default));
 
             var helper = new MovieDbHelper(db);
             var tableExist = await helper.TableExists("Movies");
@@ -107,7 +110,7 @@ namespace MovieApp.Fragments
             {
                 movieCount = await db.Table<Movies>().CountAsync();
             }
-            if (movieCount > 0)
+            if (movieCount > 0 && sortBy != "favorites")
             {
                 await GetCachedMovies(gridView);
             }
@@ -125,9 +128,58 @@ namespace MovieApp.Fragments
             {
                 var httpClient = new HttpClient();
                 var prefs = PreferenceManager.GetDefaultSharedPreferences(Activity);
-                var sortBy = prefs.GetString(Resources.GetString(Resource.String.pref_sort_key), Resources.GetString(Resource.String.pref_sort_default));
-                var getPopularMoviesJson = httpClient.GetStringAsync("http://api.themoviedb.org/3/discover/movie?sort_by=" + sortBy + "&api_key=51be394ff82a4dec506f5cf2ce21f6d4");
-                var movieResult = await getPopularMoviesJson;
+                var sortBy = prefs.GetString(Resources.GetString(Resource.String.pref_sort_key), Resources.GetString(Resource.String.pref_sort_default));              
+                var movieResult = "";
+                if (sortBy != "favorites")
+                {
+                    Task<string> getPopularMoviesJson = null;
+                    getPopularMoviesJson = httpClient.GetStringAsync("http://api.themoviedb.org/3/discover/movie?sort_by=" + sortBy + "&api_key={YOUR API KEY}");
+                    movieResult = await getPopularMoviesJson;
+                }
+                else
+                {
+                    try
+                    {
+                        var faveUri = Favorites.ContentUri;
+                        var movieUri = Movies.ContentUri;
+                        var favorites = await provider.Query<Favorites>(faveUri);
+
+                        var movieList = new List<Movies>();
+                        
+                        foreach (var favorite in favorites)
+                        {
+                            paths.Add(favorite.PosterPath);
+                            movieIds.Add(favorite.MovieId);
+
+                            var movie = new Movies()
+                            {
+                                MovieId = favorite.MovieId,
+                                MovieTitle = favorite.MovieTitle,
+                                Plot = favorite.Plot,
+                                PosterPath = favorite.PosterPath,
+                                ReleaseDate = favorite.ReleaseDate,
+                                Reviews = favorite.Reviews,
+                                Trailers = favorite.Trailers,
+                                VoteAverage = favorite.VoteAverage,
+                                IsFavorite = true
+                            };
+
+                            movieList.Add(movie);
+                        }
+                        await provider.Insert(movieUri,movieList);
+
+                        var imgAdapter = new ImageAdapter(Activity, paths, movieIds);
+                        view.Adapter = imgAdapter;
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Error("Image Adapter", ex.Message);
+                        return;
+                    }
+
+                    return;
+                }
+
                 await GetMoviePosterPaths(movieResult, view);
 
             }
@@ -160,7 +212,7 @@ namespace MovieApp.Fragments
             var count = 0;
             foreach (var movie in movieIds)
             {
-                var getJson = httpClient.GetStringAsync("http://api.themoviedb.org/3/movie/" + movie + "?api_key=51be394ff82a4dec506f5cf2ce21f6d4&append_to_response=reviews,trailers");
+                var getJson = httpClient.GetStringAsync("http://api.themoviedb.org/3/movie/" + movie + "?api_key={YOUR API KEY}&append_to_response=reviews,trailers");
                 var movieInfoStringBuilder = new StringBuilder();
                 movieInfoStringBuilder.Append(getJson.Result);
                 var jsonString = movieInfoStringBuilder.ToString();
@@ -224,6 +276,14 @@ namespace MovieApp.Fragments
         private async Task CacheMovies (List<Movies> movies)
         {
             var movieHelper = new MovieDbHelper(db);
+            var faveUri = Favorites.ContentUri;
+            await movieHelper.CreateTable(typeof(Favorites));
+            var favorites = await provider.Query<Favorites>(faveUri);
+            var favoritesMovieIds = favorites.Select(f => f.MovieId).ToList();
+            movies.Where(m=>favoritesMovieIds
+            .Contains(m.MovieId))
+            .ToList()
+            .ForEach(f=>f.IsFavorite = true);
 
             await movieHelper.CreateTable(typeof(Movies)).ContinueWith(async t =>
             {

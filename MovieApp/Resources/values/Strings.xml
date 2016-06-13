@@ -21,11 +21,13 @@
 	<string name="pref_sort_default">popularity.desc</string>
 	<string-array name="pref_sort_entries">
 	<item>Most Popular</item>
-	<item>Highest Rated</item>
+    <item>Highest Rated</item>
+    <item>Favorites</item>
 	</string-array>
 	<string-array name="pref_sort_values">
 	<item>popularity.desc</item>
-	<item>vote_average.desc</item>
+    <item>vote_average.desc</item>
+    <item>favorites</item>
 	</string-array>
 
   <string name="content_authority">com.silverlining.movieapp</string>
